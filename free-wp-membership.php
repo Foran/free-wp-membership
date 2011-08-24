@@ -143,10 +143,10 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 			add_menu_page(__('WP-Membership General Settings', 'wp-membership'), __('WP-Membership', 'wp-membership'), 8, __FILE__, array(&$this, 'display_options_tab_0'));
 			add_submenu_page(__FILE__, __('WP-Membership General Settings', 'wp-membership'), __('News &amp; Info', 'wp-membership'), 8, __FILE__, array(&$this, 'display_options_tab_0'));
 			add_submenu_page(__FILE__, __('WP-Membership General Settings', 'wp-membership'), __('General Settings', 'wp-membership'), 8, dirname(__FILE__)."/top_level_option_1.php", array(&$this, 'display_options_tab_1'));
-			if($this->check_function('display_options_tab_2')) add_submenu_page(__FILE__, __('WP-Membership Users', 'wp-membership'), __('Users', 'wp-membership'), 8, dirname(__FILE__)."/top_level_option_2.php", array(&$this, 'display_options_tab_2'));
-			if($this->check_function('display_options_tab_3')) add_submenu_page(__FILE__, __('WP-Membership Levels', 'wp-membership'), __('Levels', 'wp-membership'), 8, dirname(__FILE__)."/top_level_option_3.php", array(&$this, 'display_options_tab_3'));
-		    if($this->check_function('display_options_tab_4')) add_submenu_page(__FILE__, __('WP-Membership Register Pages', 'wp-membership'), __('Register Pages', 'wp-membership'), 8, dirname(__FILE__)."/top_level_option_4.php", array(&$this, 'display_options_tab_4'));
-			if($this->check_function('display_options_tab_5')) add_submenu_page(__FILE__, __('WP-Membership Payment Gateways', 'wp-membership'), __('Payment Gateways', 'wp-membership'), 8, dirname(__FILE__)."/top_level_option_5.php", array(&$this, 'display_options_tab_5'));
+			add_submenu_page(__FILE__, __('WP-Membership Users', 'wp-membership'), __('Users', 'wp-membership'), 8, dirname(__FILE__)."/top_level_option_2.php", array(&$this, 'display_options_tab_2'));
+			add_submenu_page(__FILE__, __('WP-Membership Levels', 'wp-membership'), __('Levels', 'wp-membership'), 8, dirname(__FILE__)."/top_level_option_3.php", array(&$this, 'display_options_tab_3'));
+		    add_submenu_page(__FILE__, __('WP-Membership Register Pages', 'wp-membership'), __('Register Pages', 'wp-membership'), 8, dirname(__FILE__)."/top_level_option_4.php", array(&$this, 'display_options_tab_4'));
+			add_submenu_page(__FILE__, __('WP-Membership Payment Gateways', 'wp-membership'), __('Payment Gateways', 'wp-membership'), 8, dirname(__FILE__)."/top_level_option_5.php", array(&$this, 'display_options_tab_5'));
 			add_submenu_page(__FILE__, __('WP-Membership Feedback', 'wp-membership'), __('Feedback', 'wp-membership'), 8, dirname(__FILE__)."/top_level_option_6.php", array(&$this, 'display_options_tab_6'));
 			add_submenu_page(__FILE__, __('WP-Membership Troubleshooting', 'wp-membership'), __('Troubleshooting', 'wp-membership'), 8, dirname(__FILE__)."/top_level_option_7.php", array(&$this, 'display_options_tab_7'));
 		}
@@ -567,7 +567,7 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 			global $wpdb;
 			
 			$plugin_dir = basename(dirname(__FILE__));
-			if($plugin_dir != 'wp-membership') $this->admin_notices[] = 'Warning, the plug-in is not installed in the wp-content/plugins/wp-membership folder. Instead it is installed in the wp-content/plugins/'.$plugin_dir.' folder. This may prefent the plug-in from functioning properly.';
+			if($plugin_dir != 'free-wp-membership') $this->admin_notices[] = 'Warning, the plug-in is not installed in the wp-content/plugins/free-wp-membership folder. Instead it is installed in the wp-content/plugins/'.$plugin_dir.' folder. This may prefent the plug-in from functioning properly.';
 			
 			if(@$_REQUEST['wp-membership_recreatedb'] == '1') {
 				if($this->create_tables()) {
@@ -580,7 +580,7 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 			
 			$this->basepath = pathinfo($_SERVER['SCRIPT_FILENAME']);
 			$this->basepath = ereg_replace("/wp-admin\$", "", getcwd());//@$this->basepath['dirname']);
-			$this->basepath = ereg_replace("/wp-content/plugins/wp-membership\$", "", @$this->basepath);
+			$this->basepath = ereg_replace("/wp-content/plugins/free-wp-membership\$", "", @$this->basepath);
 			$methods = array();
 			//TODO load data library
 			$methods = @file_get_contents(dirname(__FILE__).'/methods/data_library');
@@ -1912,7 +1912,6 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 				$ch = curl_init(str_ireplace("http://", "https://", get_option('siteurl')));
 				if($ch) {
 					curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-					$this->use_https_proxy($ch);
 					$buffer = curl_exec($ch);
 					if($buffer !== false) {
 						echo 'HTTPS detected';
@@ -2042,10 +2041,10 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 				update_option("wp-membership_admin_menu_location", $admin_menu_location);
 				
 				if($update_success === true) {
-					echo "<div style=\"background-color: rgb(255, 251, 204);\" id=\"message\" class=\"updated fade\"><p><strong>WP-Membership General Settings Updated Successfully.</strong></p></div>";
+					echo "<div style=\"background-color: rgb(255, 251, 204);\" id=\"message\" class=\"updated fade\"><p><strong>Free WP-Membership General Settings Updated Successfully.</strong></p></div>";
 				}
 				else if($update_success === false) {
-					echo "<div id=\"message\" class=\"error\"><p><strong>WP-Membership General Settings Failed to Delete.</strong></p></div>";
+					echo "<div id=\"message\" class=\"error\"><p><strong>Free WP-Membership General Settings Failed to Delete.</strong></p></div>";
 				}
 			}
 			?>
@@ -2244,32 +2243,6 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 			<?php
 			}
 			?>
-			</table>
-			
-			<h3>Proxy Settings</h3>
-			
-			<table class="form-table">
-			
-			<tr valign="top">
-			<th scope="row">HTTP Address</th>
-			<td><input type="text" name="wp-membership_httpproxy_address" value="<?php echo get_option('wp-membership_httpproxy_address'); ?>" /></td>
-			</tr>
-			
-			<tr valign="top">
-			<th scope="row">HTTP Port</th>
-			<td><input type="text" name="wp-membership_httpproxy_port" value="<?php echo get_option('wp-membership_httpproxy_port'); ?>" /></td>
-			</tr>
-			
-			<tr valign="top">
-			<th scope="row">HTTPS Address</th>
-			<td><input type="text" name="wp-membership_httpsproxy_address" value="<?php echo get_option('wp-membership_httpsproxy_address'); ?>" /></td>
-			</tr>
-			
-			<tr valign="top">
-			<th scope="row">HTTPS Port</th>
-			<td><input type="text" name="wp-membership_httpsproxy_port" value="<?php echo get_option('wp-membership_httpsproxy_port'); ?>" /></td>
-			</tr>
-
 			</table>
 			
 			<h3>Admin Menu Settings</h3>
@@ -4245,9 +4218,7 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 						<?php
 						$first = true;
 						foreach($tabs as $id => $tab) {
-							if(!$tab['Is_Virtual'] || $this->check_function('display_options_tab_'.$id)) {
 								?><li><a id="wp_membership_tab_link_<?php echo $id; ?>" href="<?php echo $_SERVER['PHP_SELF']."?".$query_string.(strlen($query_string) > 0 ? "&" : "")."wp-membership_tab=$id"; ?>" onclick="javascript:return set_wp_membership_options_tab(<?php echo $id; ?>);"<?php if(($first && trim(@$_REQUEST['wp-membership_tab']) == "") || @$_REQUEST['wp-membership_tab'] == $id) echo " class=\"current\""; ?>><?php echo $tab['Caption']; ?></a></li><?php
-							}
 							if($first) $first = false;
 						}
 						?>
@@ -4256,11 +4227,9 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 				<?php
 				$first = true;
 				foreach($tabs as $id => $tab) {
-					if(!$tab['Is_Virtual'] || $this->check_function('display_options_tab_'.$id)) {
 						?><div id="wp_membership_tab_<?php echo $id; ?>"<?php if((!$first || trim(@$_REQUEST['wp-membership_tab']) != "") && @$_REQUEST['wp-membership_tab'] != $id) echo " style=\"display: none;\""; ?>>
 				<?php @eval('$this->display_options_tab_'.$id.'();'); ?>
 				</div><?php
-					}
 					if($first) $first = false;
 				}
 				?>
