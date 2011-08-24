@@ -4072,6 +4072,7 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 			$div_wrapper = false;
 			if(!isset($query_string)) {
 			    load_plugin_textdomain('wp-membership', false, 'wp-membership');
+			    echo 'Error: Feedback support is currently broken';
 			    $query_string = "page=".urlencode(@$_REQUEST['page']);//ereg_replace("[&?]?wp-membership_tab[=][^&]*", "", @$_SERVER['QUERY_STRING']);
 			    $div_wrapper = true;
 			}
