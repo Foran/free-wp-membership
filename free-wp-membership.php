@@ -3132,12 +3132,6 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 			<h2><?php _e('WP-Membership - Register Pages', 'wp-membership'); ?></h2>
 			<?php
 		
-			$div_wrapper = false;
-			if(!isset($query_string)) {
-			    $query_string = "page=".urlencode(@$_REQUEST['page']);//ereg_replace("[&?]?wp-membership_tab[=][^&]*", "", @$_SERVER['QUERY_STRING']);
-			    $div_wrapper = true;
-			}
-			if($div_wrapper) echo '<div class="wrap">';
 			$switchvar = @$_REQUEST['wp-membership_action'];
 			$edit_success = null;
 			if(strlen(@$_REQUEST['wp-membership_remove_extra_field']) > 0) {
@@ -4228,8 +4222,8 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 				<?php
 				$first = true;
 				foreach($tabs as $id => $tab) {
-						?><div id="wp_membership_tab_<?php echo $id; ?>"<?php if((!$first || trim(@$_REQUEST['wp-membership_tab']) != "") && @$_REQUEST['wp-membership_tab'] != $id) echo " style=\"display: none;\""; ?>>
-				<?php @eval('$this->display_options_tab_'.$id.'();'); ?>
+						?><div id="wp_membership_tab_<?php echo $id; ?>"<?php if((!$first || trim(@$_REQUEST['wp-membership_tab']) != "") && @$_REQUEST['wp-membership_tab'] != $id) {echo " style=\"display: none;\"";} ?>>
+				<?php eval('$this->display_options_tab_'.$id.'();'); ?>
 				</div><?php
 					if($first) $first = false;
 				}
