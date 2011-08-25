@@ -3,7 +3,7 @@ Contributors: foran
 Tags: membership
 Requires at least: 2.6.0
 Tested up to: 3.2.1
-Stable tag: 1.1.4
+Stable tag: 1.1.5
 
 Allows the ability to have a membership based page restriction. (previously by Synergy Software Group LLC)
 
