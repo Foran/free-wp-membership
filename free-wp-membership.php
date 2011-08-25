@@ -3,7 +3,7 @@
 Plugin Name: Free WP-Membership Plugin
 Plugin URI: http://free-wp-membership.foransrealm.com/
 Description: Allows the ability to have a membership based page restriction. (previously by Synergy Software Group LLC)
-Version: 1.1.4
+Version: 1.1.5
 Author: Ben M. Ward
 Author URI: http://free-wp-membership.foransrealm.com/
 
@@ -70,7 +70,7 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 		private $plugins = array();
 		private $methods = array();
 		private $basepath = "";
-		private $version = "1.1.4";
+		private $version = "1.1.5";
 		private $admin_notices = array();
 		private $admin_messages = array();
 		private $public_messages = array();
@@ -1845,7 +1845,7 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 			
 			<tr valign="top">
 			<th scope="row">Free WP-Membership Version</th>
-			<td>1.1.4</td>
+			<td>1.1.5</td>
 			</tr>
 			
 			<tr valign="top">
