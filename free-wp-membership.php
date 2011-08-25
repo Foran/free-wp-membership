@@ -1954,6 +1954,38 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 			</table>
 
 			<?php
+			$ch = curl_init('https://api.github.com/repos/Foran/free-wp-membership/issues');
+			if($ch) {
+				curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+				$buffer = curl_exec($ch);
+				if($buffer) {
+					$issues = json_decode($buffer);
+			?>
+			<h3>Issues</h3>
+				<?php
+				foreach($issues as $issue) {
+				?>
+				<h4><?php echo htmlentities($issue->title); ?></h4>
+			<table class="form-table">
+				<tr valign="top">
+					<th scope="row">Milestone</th>
+					<td><?php echo htmlentities(isset($issue->milestone) ? $issue->milestone->title : 'N/A'); ?></td>
+				</tr>
+				<tr valign="top">
+					<th scope="row">Description</th>
+					<td><?php echo htmlentities($issue->body); ?></td>
+				</tr>
+				<tr valign="top">
+					<th scope="row">Assigned to</th>
+					<td><?php echo isset($issue->assignee) ? '<a href="https://github.com/'.$issue->assignee->login.'" title="'.$issue->assignee->login.'"><img src="'.$issue->assignee->avatar_url.'" /></a>' : htmlentities('Unassigned'); ?></td>
+				</tr>
+			</table>
+				<?php
+				}
+				?>
+			<?php
+				}
+			}
 			if($div_wrapper) echo '</div>';
 		}
 
