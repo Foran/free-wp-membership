@@ -1,6 +1,5 @@
 === Free WP-Membership Plugin ===
 Contributors: foran
-Donate link: http://free-wp-membership.foransrealm.com/
 Tags: membership
 Requires at least: 2.6.0
 Tested up to: 3.2.1
