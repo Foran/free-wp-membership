@@ -3,7 +3,7 @@ Contributors: foran
 Tags: membership
 Requires at least: 2.6.0
 Tested up to: 3.2.1
-Stable tag: 1.1.5
+Stable tag: 1.1.6.1
 
 Allows the ability to have a membership based page restriction. (previously by Synergy Software Group LLC)
 
@@ -22,6 +22,8 @@ Simply unpack in the wp-content/plugins folder
 = What is currently being worked on? =
 Check [GitHub](https://github.com/Foran/free-wp-membership/issues "Current Issues") for the most current list of items
 == Changelog ==
+= 1.1.6.1 =
+* fixed an error in the installation of 1.1.6 that caused a server 500 error
 = 1.1.6 =
 * Updated the readme.txt to better conform with WordPress.org's parser
 * Refactored Option Tabs (Code Cleanup)
