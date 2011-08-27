@@ -19,10 +19,20 @@ The primary repository for Free WP-Membership is at [GitHub](https://github.com/
 Simply unpack in the wp-content/plugins folder
 
 == Frequently Asked Questions ==
-
+= What is currently being worked on? =
+Check [GitHub](https://github.com/Foran/free-wp-membership/issues "Current Issues") for the most current list of items
 == Changelog ==
+= 1.1.6 =
+* Updated the readme.txt to better conform with WordPress.org's parser
+* Refactored Option Tabs (Code Cleanup)
+* Added Important Links to News & Info tab
+= 1.1.5 =
+* Added Issues to News & Info tab
+* Fixed some more navigation issues (broken by removing the DRM) when accessing Payment Gateways, Feedback or Troubleshooting from the Settings menu
 = 1.1.4 =
+* Integrated with WordPress.org's plugin database
+* Added an error message to the Feedback tab indicating that it's currently non-functional
+* Fixed some navigation that was broken after stripping out DRM
+* Payment Gateways were broken due removal of DRM
+* Stripped DRM from plug-in
 * Initial release as Open Source
-== Upgrade Notice ==
-
-== Screenshots ==
