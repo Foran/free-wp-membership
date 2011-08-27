@@ -24,7 +24,7 @@ This file is part of Free WP-Membership.
 
 */
 
-$wp_membership_min_php_version = '5.1.0';
+$wp_membership_min_php_version = '5.3.0';
 
 if(version_compare(PHP_VERSION, $wp_membership_min_php_version, '>=') && !interface_exists("wp_membership_payment_gateway")) {
 	interface wp_membership_payment_gateway {
