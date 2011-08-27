@@ -3,7 +3,7 @@
 Plugin Name: Free WP-Membership Plugin
 Plugin URI: http://free-wp-membership.foransrealm.com/
 Description: Allows the ability to have a membership based page restriction. (previously by Synergy Software Group LLC)
-Version: 1.1.5
+Version: 1.1.6
 Author: Ben M. Ward
 Author URI: http://free-wp-membership.foransrealm.com/
 
@@ -70,8 +70,8 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 		private $plugins = array();
 		private $m_SettingsTabs = array();
 		private $methods = array();
-		private $basepath = '../wp-content/plugins/free-wp-membership/';
-		private $version = "1.1.5";
+		private $basepath = '';
+		private $version = "1.1.6";
 		private $admin_notices = array();
 		private $admin_messages = array();
 		private $public_messages = array();
@@ -110,7 +110,7 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 			
 			$showmenu = false;
 			if(in_array('Settings', get_option("wp-membership_admin_menu_location"))) {
-				if(file_exists(dirname(__FILE__)."/old_admin_menu.php")) {
+				if(file_exists(dirname(__FILE__)."/free-wp-membership.php")) {
 					add_action('admin_menu', array(&$this, 'old_admin_menu'));
 					$showmenu = true;
 				}
@@ -152,15 +152,21 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 			load_plugin_textdomain('wp-membership', false, $this->language_path);
 			$first = true;
 			$parent = "";
+			$basepath = pathinfo($_SERVER['SCRIPT_FILENAME']);
+			$basepath = ereg_replace("/wp-admin\$", "", getcwd());//@$this->basepath['dirname']);
+			$basepath = ereg_replace("/wp-content/plugins/free-wp-membership\$", "", @$this->basepath);
 			foreach($this->m_SettingsTabs as $name => $tab) {
-				require_once($basepath.'SettingsTabs/'.$name.'.php');
-				eval('$this->m_SettingsTabs[$name]["instance"] = new '.$tab['class'].'();');
-				if($first) {
-					$first = false;
-					$parent = $this->m_SettingsTabs[$name]['instance']->get_File();
-					add_menu_page(__('WP-Membership '.$tab['title'], 'wp-membership'), __('WP-Membership', 'wp-membership'), 8, $parent, array(&$this->m_SettingsTabs[$name]['instance'], 'DisplayTab'));
+				$file = $basepath.'/wp-content/plugins/free-wp-membership/SettingsTabs/'.$name.'.php';
+				if(file_exists($file)) {
+					require_once($file);
+					eval('$this->m_SettingsTabs[$name]["instance"] = new '.$tab['class'].'();');
+					if($first) {
+						$first = false;
+						$parent = $this->m_SettingsTabs[$name]['instance']->get_File();
+						add_menu_page(__('WP-Membership '.$tab['title'], 'wp-membership'), __('WP-Membership', 'wp-membership'), 8, $parent, array(&$this->m_SettingsTabs[$name]['instance'], 'DisplayTab'));
+					}
+					add_submenu_page($parent, __('WP-Membership '.$tab['title'], 'wp-membership'), __($tab['title'], 'wp-membership'), 8, $this->m_SettingsTabs[$name]['instance']->get_File(), array(&$this->m_SettingsTabs[$name]['instance'], 'DisplayTab'));
 				}
-				add_submenu_page($parent, __('WP-Membership '.$tab['title'], 'wp-membership'), __($tab['title'], 'wp-membership'), 8, $this->m_SettingsTabs[$name]['instance']->get_File(), array(&$this->m_SettingsTabs[$name]['instance'], 'DisplayTab'));
 			}
 		}
 		
