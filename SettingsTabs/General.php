@@ -26,6 +26,7 @@ if(isset($wp_membership_plugin) && class_exists('wp_membership_plugin') && is_a(
 				return __FILE__;
 			}
 			function DisplayTab() {
+				global $wp_membership_plugin;
 				$div_wrapper = false;
 				if(!isset($query_string)) {
 				    load_plugin_textdomain('wp-membership', false, 'wp-membership');
@@ -199,6 +200,9 @@ if(isset($wp_membership_plugin) && class_exists('wp_membership_plugin') && is_a(
 	
 				</table>
 				
+				<h3>Credit Merchant Account(s)</h3>
+
+				<table class="form-table">
 				<?php
 				$countries = array(	'aus' => 'Australia',
 									'aut' => 'Austria',
