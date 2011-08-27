@@ -17,9 +17,10 @@
 
 */
 
-if(isset($wp_membership_plugin) && class_exists('wp_membership_plugin') && is_a($wp_membership_plugin, 'wp_membership_plugin')) {
-	function wp_membership_old_admin_menu() {
-		$wp_membership_plugin->display_options_tab_3();
+if(!interface_exists('IWPMembershipSettingsTab')) {
+	interface IWPMembershipSettingsTab {
+		function get_File();
+		function DisplayTab();
 	}
 }
 ?>
