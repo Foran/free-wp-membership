@@ -22,6 +22,7 @@ Simply unpack in the wp-content/plugins folder
 = What is currently being worked on? =
 Check [GitHub](https://github.com/Foran/free-wp-membership/issues "Current Issues") for the most current list of items
 == Changelog ==
+= 1.1.7 =
 = 1.1.6.1 =
 * fixed an error in the installation of 1.1.6 that caused a server 500 error
 = 1.1.6 =
@@ -38,3 +39,6 @@ Check [GitHub](https://github.com/Foran/free-wp-membership/issues "Current Issue
 * Payment Gateways were broken due removal of DRM
 * Stripped DRM from plug-in
 * Initial release as Open Source
+== Upgrade Notice ==
+= 1.1.6.1 =
+Contains [HotFix](https://github.com/Foran/free-wp-membership/issues/8 "Details for hotfix") for broken build 1.1.6
