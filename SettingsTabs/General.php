@@ -65,22 +65,6 @@ if(isset($wp_membership_plugin) && class_exists('wp_membership_plugin') && is_a(
 										"wp-membership_httpproxy_port",
 										"wp-membership_httpsproxy_address",
 										"wp-membership_httpsproxy_port");
-					$dh = @opendir(dirname(__FILE__).'/plugins');
-					if($dh) {
-						while(($file = readdir($dh)) !== false) {
-							if(ereg('([.]php[0-9]*)$', $file, $regs)) {
-								$name = substr($file, 0, strlen($file) - strlen($regs[1]));
-								$option = "wp-membership_plugin_$name";
-								if(isset($wp_membership_plugin->plugins[$name]) && is_a($wp_membership_plugin->plugins[$name], 'wp_membership_payment_gateway')) {
-									if(!method_exists($wp_membership_plugin->plugins[$name], 'is_Currency_Supported') || !$wp_membership_plugin->plugins[$name]->is_Currency_Supported()) unset($_REQUEST[$option]);
-								}
-								else {
-								}
-								$options[] = $option;
-							}
-						}
-						closedir($dh);
-					}
 					foreach($options as $option) {
 						update_option($option, @$_REQUEST[$option]);
 					}
@@ -214,36 +198,6 @@ if(isset($wp_membership_plugin) && class_exists('wp_membership_plugin') && is_a(
 				</tr>
 	
 				</table>
-				
-				<h3>Credit Merchant Account(s)</h3>
-				
-				<table class="form-table">
-				
-				<tr valign="top">
-				<th scope="row">Payment Gateways</th>
-				<td><?php
-					$dh = @opendir(dirname(__FILE__).'/plugins');
-					if($dh) {
-						$first = true;
-						while(($file = readdir($dh)) !== false) {
-							if(ereg('([.]php[0-9]*)$', $file, $regs)) {
-								$name = substr($file, 0, strlen($file) - strlen($regs[0]));
-								$option = "wp-membership_plugin_$name";
-								if($first) $first = false;
-								else echo "<br />";
-								?><input type="checkbox" name="<?php echo htmlentities($option); ?>" value="1"<?php if(get_option($option) == "1") echo " CHECKED"; ?>" /><?php echo " ".htmlentities($name);
-								if(isset($wp_membership_plugin->plugins[$name]) && is_a($wp_membership_plugin->plugins[$name], 'wp_membership_payment_gateway')) {
-									if(!method_exists($wp_membership_plugin->plugins[$name], 'is_Currency_Supported')) echo ' (Add-on appears to be corrupted)';
-									else if(!$wp_membership_plugin->plugins[$name]->is_Currency_Supported()) echo ' (Selected currency not supported)';
-								}
-								else {
-								}
-							}
-						}
-						closedir($dh);
-					}
-					?></td>
-				</tr>
 				
 				<?php
 				$countries = array(	'aus' => 'Australia',
