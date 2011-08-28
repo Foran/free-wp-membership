@@ -173,6 +173,9 @@ if(isset($wp_membership_plugin) && class_exists('wp_membership_plugin') && is_a(
 				$buffer = curl_exec($ch);
 				if($buffer) {
 					$issues = json_decode($buffer);
+					usort($issues, function ($a, $b) {
+						return isset($a->milestone) && isset($b->milestone) ? version_compare($a->milestone->title, $b->milestone->title, '>=') : (isset($b->milestone) ? 1 : 0);
+					});
 			?>
 			<h3>Issues</h3>
 				<?php
