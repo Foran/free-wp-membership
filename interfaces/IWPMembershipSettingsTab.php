@@ -18,8 +18,19 @@
 */
 
 if(!interface_exists('IWPMembershipSettingsTab')) {
+	/**
+	 * Interface for all Admin settings pages
+	 * Anything that implements this interface will appear in the Settings section/tab
+	 */
 	interface IWPMembershipSettingsTab {
+		/**
+		 * @return The filename of the file cantaining the source of the concrete implementation
+		 */
 		function get_File();
+		/**
+		 * Display the contents of the tab
+		 *
+		 */
 		function DisplayTab();
 	}
 }

@@ -987,6 +987,12 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 			return $retval;
 		}
 		
+		/**
+		 * Retrieve a list of all posts protected by the given level(s), return all protected posts if no level is specified
+		 *
+		 * @param array|int $level_id
+		 * @return array a list of protected posts
+		 */
 		function get_Level_Posts($level_id = null) {
 			$retval = array();
 
@@ -1015,6 +1021,12 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 			return $retval;
 		}
 		
+		/**
+		 * Retrieve a list of all categories protected by the given level(s), return all protected categories if no level is specified
+		 *
+		 * @param array|int $level_id
+		 * @return array a list of protected categories
+		 */
 		function get_Level_Categories($level_id = null) {
 			$retval = array();
 
