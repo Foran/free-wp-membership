@@ -30,6 +30,7 @@ Check the [Issues](http://free-wp-membership.foransrealm.com/Issues.html "Curren
 
 == Changelog ==
 = 1.1.7 =
+* More general code cleanup (added comments, removed unused filters, refactored and reorginized code paths, etc)
 * Issues on News & Info are now sorted by release milestone
 = 1.1.6.1 =
 * fixed an error in the installation of 1.1.6 that caused a server 500 error
