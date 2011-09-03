@@ -127,7 +127,6 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 			register_activation_hook(__FILE__, array(&$this, "activation"));
 			register_deactivation_hook(__FILE__, array(&$this, "deactivation"));
 			add_action('init', array(&$this, 'init'));
-			add_filter('the_title', array(&$this, 'the_title'));
 			add_filter('the_content', array(&$this, 'the_content'));
 			add_filter('the_content_rss', array(&$this, 'the_content'));
 			add_filter('wp_list_pages_excludes', array(&$this, 'list_pages'));
@@ -1094,10 +1093,6 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 		    }
 		    
 		    return $retval;
-		}
-		
-		function the_title($title) {
-		    return $title;
 		}
 		
 		function the_content($content) {
