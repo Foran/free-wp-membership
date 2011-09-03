@@ -13,16 +13,22 @@ Levels are not sequential, they are more like groups.
 Currently the Payment gateways are non-functional due to stripping out the copy-protection during the open sourcing process.
 These will be restored over time, including: PayPal, Authorize.net and Google Checkout.
 
-The primary repository for Free WP-Membership is at [GitHub](https://github.com/Foran/free-wp-membership "Free WP-Membership main repository")
+The primary repository for Free WP-Membership is at [GitHub](https://github.com/Foran/free-wp-membership "Free WP-Membership main repository").
+The project home page is at [Free WP-Membership](http://free-wp-membership.foransrealm.com "Free WP-Membership project home page").
 
 == Installation ==
 Simply unpack in the wp-content/plugins folder
 
 == Frequently Asked Questions ==
+= When is feature "X" going to be done? =
+I work on Free WP-Membership as time permits, so the best answer I can give is "When it's done". With that said it is open source and you can contribute to it. To do so simply fork the project on [GitHub](https://github.com/Foran/free-wp-membership "Fork Me") and submit a pull request with your changes.
+Now while I don't have any specific dates things will be done, I am keeping a current list of the sequence things are planned to be done at [Issues](http://free-wp-membership.foransrealm.com/Issues.html "Current Issues") and [GitHub](https://github.com/Foran/free-wp-membership/issues "Current Issues").
 = What is currently being worked on? =
-Check [GitHub](https://github.com/Foran/free-wp-membership/issues "Current Issues") for the most current list of items
+Check the [Issues](http://free-wp-membership.foransrealm.com/Issues.html "Current Issues") or [GitHub](https://github.com/Foran/free-wp-membership/issues "Current Issues") pages for the most current list of items.
+
 == Changelog ==
 = 1.1.7 =
+* Issues on News & Info are now sorted by release milestone
 = 1.1.6.1 =
 * fixed an error in the installation of 1.1.6 that caused a server 500 error
 = 1.1.6 =
@@ -39,6 +45,7 @@ Check [GitHub](https://github.com/Foran/free-wp-membership/issues "Current Issue
 * Payment Gateways were broken due removal of DRM
 * Stripped DRM from plug-in
 * Initial release as Open Source
+
 == Upgrade Notice ==
 = 1.1.6.1 =
 Contains [HotFix](https://github.com/Foran/free-wp-membership/issues/8 "Details for hotfix") for broken build 1.1.6
