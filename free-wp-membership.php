@@ -72,7 +72,7 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 		private $m_Shortcodes = array();
 		private $methods = array();
 		private $basepath = '';
-		public $version = "1.1.7";
+		public $version = "1.1.8";
 		public $admin_notices = array();
 		public $admin_messages = array();
 		public $public_messages = array();
@@ -114,8 +114,8 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 			if(!is_array(get_option('wp-membership_admin_menu_location'))) update_option('wp-membership_admin_menu_location', array('Settings'));
 			
 			$showmenu = false;
-			if(in_array('Settings', get_option("wp-membership_admin_menu_location"))) {
-				if(file_exists(dirname(__FILE__)."/free-wp-membership.php")) {
+			if(in_array('Settings', get_option('wp-membership_admin_menu_location'))) {
+				if(file_exists(dirname(__FILE__).'/free-wp-membership.php')) {
 					add_action('admin_menu', array(&$this, 'old_admin_menu'));
 					$showmenu = true;
 				}
@@ -129,8 +129,8 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 				add_action('admin_menu', array(&$this, 'admin_menu_init'));
 			}
 			add_filter('plugin_action_links', array(&$this, 'plugin_action_links'), 10, 2);
-			register_activation_hook(__FILE__, array(&$this, "activation"));
-			register_deactivation_hook(__FILE__, array(&$this, "deactivation"));
+			register_activation_hook(__FILE__, array(&$this, 'activation'));
+			register_deactivation_hook(__FILE__, array(&$this, 'deactivation'));
 			add_action('init', array(&$this, 'init'));
 			add_filter('the_content', array(&$this, 'the_content'));
 			add_filter('the_content_rss', array(&$this, 'the_content'));
@@ -146,16 +146,53 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 			add_filter('list_cats', array(&$this, 'list_cats'));
 			add_filter('get_terms', array(&$this, 'get_terms'), 10, 3);
 			//add_action('edit_category_form', array(&$this, 'edit_category_form'));
-			add_filter('getarchives_where', array(&$this, "search"));
+			add_filter('getarchives_where', array(&$this, 'search'));
+			add_action('wp_dashboard_setup', array(&$this, 'add_dashboard_widgets'));
 
 			$this->init_shortcodes();
 
 			$methods = array();
 		}
 		
+		function add_dashboard_widgets() {
+			wp_add_dashboard_widget('fwp_membership_dashboard_widget', 'Free WP-Membership News', array(&$this, 'dashboard_widget'));
+		}
+		
+		function dashboard_widget() {
+			$milestones = array();
+			$ch = curl_init('https://api.github.com/repos/Foran/free-wp-membership/milestones');
+			if($ch) {
+				curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+				$buffer = curl_exec($ch);
+				curl_close($ch);
+				if($buffer) {
+					$data = json_decode($buffer);
+					foreach($data as $entry) {
+						if(isset($entry->title)) {
+							$milestones[$entry->title]['progress'] = (floatval($entry->closed_issues) / (floatval($entry->open_issues) + floatval($entry->closed_issues))) * 100.00;
+							$milestones[$entry->title]['title'] = $entry->title;
+							$milestones[$entry->title]['link'] = 'https://github.com/Foran/free-wp-membership/issues?state=open&milestone='.$entry->number;
+						}
+					}
+				}
+			}
+			uasort($milestones, function ($a, $b) {
+				return isset($a['title']) && isset($b['title']) ? version_compare($a['title'], $b['title'], '>=') : (isset($b['title']) ? 1 : 0);
+			});
+			?>
+			<h4>Milestones</h4>
+			<?php
+			$last = false;
+			foreach($milestones as $milestone) {
+				?>
+				<h5><a href="<?php echo $milestone['link']; ?>"><?php echo htmlentities($milestone['title'].' is '.number_format($milestone['progress'], 2).'% complete'); ?></a></h5>
+				<?php
+			}
+		}
+		
 		function load_register_shortcodes() {
 			global $wpdb;
-			if($register_rows = $wpdb->get_results($wpdb->prepare("SELECT * FROM ".$wpdb->prefix."wp_membership_register_pages AS t1"), ARRAY_A)) {
+			if($register_rows = $wpdb->get_results($wpdb->prepare('SELECT * FROM '.$wpdb->prefix.'wp_membership_register_pages AS t1'), ARRAY_A)) {
 				foreach($register_rows as $register_row) {
 					$this->m_Shortcodes[] = array('type' => 'RegisterForm', 'class' => 'wp_membership_Shortcode_RegisterForm', 'arg' => $register_row);
 				}
