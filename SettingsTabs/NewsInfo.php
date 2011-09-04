@@ -167,10 +167,24 @@ if(isset($wp_membership_plugin) && class_exists('wp_membership_plugin') && is_a(
 			</table>
 
 			<?php
+			$milestones = array();
+			$ch = curl_init('https://api.github.com/repos/Foran/free-wp-membership/milestones');
+			if($ch) {
+				curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+				$buffer = curl_exec($ch);
+				curl_close($ch);
+				if($buffer) {
+					$data = json_decode($buffer);
+					foreach($data as $entry) {
+						if(isset($entry->title)) $milestones[$entry->title]['progress'] = (floatval($entry->closed_issues) / (floatval($entry->open_issues) + floatval($entry->closed_issues))) * 100.00;
+					}
+				}
+			}
 			$ch = curl_init('https://api.github.com/repos/Foran/free-wp-membership/issues');
 			if($ch) {
 				curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 				$buffer = curl_exec($ch);
+				curl_close($ch);
 				if($buffer) {
 					$issues = json_decode($buffer);
 					usort($issues, function ($a, $b) {
@@ -179,7 +193,22 @@ if(isset($wp_membership_plugin) && class_exists('wp_membership_plugin') && is_a(
 			?>
 			<h3>Issues</h3>
 				<?php
+				$last = false;
 				foreach($issues as $issue) {
+					if(isset($issue->milestone) && isset($issue->milestone->title) && $last != $issue->milestone->title) {
+						$last = $issue->milestone->title;
+						if(isset($milestones[$last]['progress'])) {
+							?>
+							<h4><?php echo htmlentities('Milestone '.$last.' is '.number_format($milestones[$last]['progress'], 2).'% complete'); ?></h4>
+							<?php
+						}
+					}
+					else if((!isset($issue->milestone) || is_null($issue->milestone)) && !is_null($last)) {
+						$last = null;
+						?>
+						<h4>No Milestone set</h4>
+						<?php
+					}
 				?>
 				<h4><?php echo htmlentities($issue->title); ?></h4>
 			<table class="form-table">
