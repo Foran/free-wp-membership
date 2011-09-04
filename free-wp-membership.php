@@ -67,15 +67,16 @@ if(version_compare(PHP_VERSION, $wp_membership_min_php_version, '>=') && !interf
 
 if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_membership_min_php_version, '>=') && function_exists('simplexml_load_string')) {
 	class wp_membership_plugin {
-		private $plugins = array();
+		public $plugins = array();
 		private $m_SettingsTabs = array();
+		private $m_Shortcodes = array();
 		private $methods = array();
 		private $basepath = '';
-		private $version = "1.1.7";
-		private $admin_notices = array();
-		private $admin_messages = array();
-		private $public_messages = array();
-		private $language_path = 'free-wp-membership';
+		public $version = "1.1.7";
+		public $admin_notices = array();
+		public $admin_messages = array();
+		public $public_messages = array();
+		public $language_path = 'free-wp-membership';
 		
 		function __construct() {
 			$this->m_SettingsTabs['NewsInfo'] = array('title' => 'News & Info', 'class' => 'wp_membership_SettingsTab_NewsInfo');
@@ -86,6 +87,10 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 			//$this->m_SettingsTabs['PaymentGateways'] = array('title' => 'Payment Gateways', 'class' => 'wp_membership_SettingsTab_PaymentGateways');
 			//$this->m_SettingsTabs['Feedback'] = array('title' => 'Feedback', 'class' => 'wp_membership_SettingsTab_Feedback');
 			$this->m_SettingsTabs['Troubleshooting'] = array('title' => 'Troubleshooting', 'class' => 'wp_membership_SettingsTab_Troubleshooting');
+			$this->m_Shortcodes[] = array('type' => 'LoginForm', 'class' => 'wp_membership_Shortcode_LoginForm');
+			$this->m_Shortcodes[] = array('type' => 'UserProfileForm', 'class' => 'wp_membership_Shortcode_UserProfileForm');
+			
+			$this->load_register_shortcodes();
 			
 			add_action('update_option_update_plugins', array(&$this, 'update_plugins'), 10, 2);
 			
@@ -143,205 +148,39 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 			//add_action('edit_category_form', array(&$this, 'edit_category_form'));
 			add_filter('getarchives_where', array(&$this, "search"));
 
-			add_shortcode(get_option('wp-membership_loginform_shortcode'), array(&$this, 'shortcode_LoginForm'));
-			add_shortcode(get_option('wp-membership_user_profile_from_shortcode'), array(&$this, 'shortcode_UserProfileForm'));
+			$this->init_shortcodes();
 
 			$methods = array();
 		}
 		
-		/**
-		 * Shortcode handler for the Login Form
-		 *
-		 * @param array $atts array of attributes
-		 * @param string $content text within enclosing form of shortcode element
-		 * @param string $code the shortcode found, when == callback name
-		 * @return unknown
-		 */
-		function shortcode_LoginForm($atts, $content=null, $code="") {
-			$retval = "";
-
-			global $wpdb, $wp_query;
-			
-			$attributes = shortcode_atts(array('show_forgot_password' => get_option('wp-membership_login_prompt_forgot_password')), $atts);
-			
-		    load_plugin_textdomain('wp-membership', false, $this->language_path);
-
-		    $page_id = isset($wp_query->queried_object->ID) ? $wp_query->queried_object->ID : "";
-		    
-		    if(@$_REQUEST['forgot_password'] == "1") {
-				$retval .= "<form action=\"{$_SERVER['PHP_SELF']}?page_id=".urlencode($page_id)."\" method=\"post\"> <input name=\"do_forgot_password\" type=\"hidden\" value=\"1\" />";
-				$retval .= "<table border=\"0\">";
-				$retval .= "<tbody>";
-				$retval .= "<tr>";
-				$retval .= "<td>".__('Email', 'wp-membership');
-				$username_query = $wpdb->prepare("SELECT COUNT(*) AS Total FROM {$wpdb->prefix}wp_membership_users WHERE Username!=NULL");
-				if($username_row = $wpdb->get_row($username_query, ARRAY_A)) {
-					if($username_row['Total'] > 0) $retval .= " / ".__('Username', 'wp-membership');
+		function load_register_shortcodes() {
+			global $wpdb;
+			if($register_rows = $wpdb->get_results($wpdb->prepare("SELECT * FROM ".$wpdb->prefix."wp_membership_register_pages AS t1"), ARRAY_A)) {
+				foreach($register_rows as $register_row) {
+					$this->m_Shortcodes[] = array('type' => 'RegisterForm', 'class' => 'wp_membership_Shortcode_RegisterForm', 'arg' => $register_row);
 				}
-				$retval .= "</td>";
-				$retval .= "<td><input style=\"background-color: #ffffa0;\" name=\"email\" type=\"text\" value=\"".htmlentities(@$_REQUEST['email'])."\" /></td>";
-				$retval .= "</tr>";
-				$retval .= "<tr>";
-				$retval .= "<td colspan=\"2\"><input type=\"submit\" value=\"".__('Forgot Password', 'wp-membership')."\" /></td>";
-				$retval .= "</tr>";
-				$retval .= "</tbody></table>";
-				$retval .= "</form>";
-			}
-			else {
-				if(is_null($content) || trim($content) == '') {
-					$retval .= "<form action=\"{$_SERVER['PHP_SELF']}?page_id=".urlencode($page_id)."\" method=\"post\"> <input name=\"do_login\" type=\"hidden\" value=\"1\" />";
-					$retval .= "<table border=\"0\">";
-					$retval .= "<tbody>";
-					$retval .= "<tr>";
-					$retval .= "<td>".__('Email', 'wp-membership');
-					$username_query = $wpdb->prepare("SELECT COUNT(*) AS Total FROM {$wpdb->prefix}wp_membership_users WHERE Username!=NULL");
-					if($username_row = $wpdb->get_row($username_query, ARRAY_A)) {
-						if($username_row['Total'] > 0) $retval .= " / ".__('Username', 'wp-membership');
-					}
-					$retval .= "</td>";
-					$retval .= "<td><input style=\"background-color: #ffffa0;\" name=\"email\" type=\"text\" /></td>";
-					$retval .= "</tr>";
-					$retval .= "<tr>";
-					$retval .= "<td>".__('Password', 'wp-membership')."</td>";
-					$retval .= "<td><input name=\"password\" type=\"password\" /></td>";
-					$retval .= "</tr>";
-					$retval .= "<tr>";
-					$retval .= "<td colspan=\"2\"><input type=\"submit\" value=\"".__('Login', 'wp-membership')."\" /></td>";
-					$retval .= "</tr>";
-					$retval .= "</tbody></table>";
-					$retval .= "</form>";
-				}
-				else $retval .= $content;
-	    		if($attributes['show_forgot_password'] == "1") {
-	    			$retval .= "<div class=\"prompt_password\"><a href=\"{$_SERVER['PHP_SELF']}?page_id=".urlencode($page_id)."&forgot_password=1&email=".urlencode(@$_REQUEST['email'])."\">Forgot Password?</a></div>";
-	    		}
-			}
-			
-			return $retval;
+			}			
 		}
 		
-		function shortcode_UserProfileForm($atts, $content=null, $code="") {
-			$retval = "";
-			
-			global $wpdb;
-
-			$user_query = $wpdb->prepare("SELECT * FROM {$wpdb->prefix}wp_membership_users AS t1 WHERE t1.User_ID=%s", @$_SESSION['wp-membership_plugin']['wp-membership_user_id']);
-			if($user_row = $wpdb->get_row($user_query, ARRAY_A)) {
-				if(@$_REQUEST['do_userprofile'] == "1") {
-					if(strlen(trim(@$_REQUEST['password'])) > 0 || strlen(trim(@$_REQUEST['password2'])) > 0) {
-						if(strlen(trim(@$_REQUEST['password'])) > 0) {
-							if(trim(@$_REQUEST['password']) == trim(@$_REQUEST['password2'])) {
-								$update_query = $wpdb->prepare("UPDATE {$wpdb->prefix}wp_membership_users SET Password=PASSWORD(%s) WHERE User_ID=%s", trim(@$_REQUEST['password']), $user_row['User_ID']);
-								if($wpdb->query($update_query) !== false) {
-							    	$update_query = $wpdb->prepare("UPDATE ".$wpdb->prefix."wp_membership_users SET WP_Password=%s WHERE User_ID=%s", wp_hash_password(trim(@$_REQUEST['password'])), $user_row['User_ID']);
-						    		$wpdb->query($update_query);
-									$retval .= "<p>Successfully Updated Password</p>";
-								}
-								else {
-									$retval .= "<p>Failed to update password</p>";
-								}
-							}
-							else {
-								$retval .= "<p>Passwords must match</p>";
-							}
-						}
-						else {
-							$retval .= "<p>Password can not be blank</p>";
-						}
-					}
-					$update_query = $wpdb->prepare("UPDATE {$wpdb->prefix}wp_membership_users SET Email=%s WHERE User_ID=%s", trim(@$_REQUEST['email']), $user_row['User_ID']);
-					if($wpdb->query($update_query) !== false) {
-						$retval .= "<p>Successfully Updated Profile</p>";
-						$user_query = $wpdb->prepare("SELECT * FROM {$wpdb->prefix}wp_membership_users AS t1 WHERE t1.User_ID=%s", @$_SESSION['wp-membership_plugin']['wp-membership_user_id']);
-						$tmp = $user_row;
-						if(!($user_row = $wpdb->get_row($user_query, ARRAY_A))) {
-							$user_row = $tmp;
-						}
-					}
-					else {
-						$retval .= "<p>Failed to update profile</p>";
-					}
+		function init_shortcodes() {
+			load_plugin_textdomain('wp-membership', false, $this->language_path);
+			$first = true;
+			$parent = "";
+			$basepath = pathinfo($_SERVER['SCRIPT_FILENAME']);
+			$basepath = ereg_replace("/wp-admin\$", "", @$basepath['dirname']);
+			$basepath = ereg_replace("/wp-content/plugins/free-wp-membership\$", "", $basepath);
+			$loaded = array();
+			foreach($this->m_Shortcodes as $key => $shortcode) {
+				$file = $basepath.'/wp-content/plugins/free-wp-membership/Shortcodes/'.$shortcode['type'].'.php';
+				if(file_exists($file)) {
+					require_once($file);
+					$loaded[$file] = true;
 				}
-				else if(@$_REQUEST['do_unsubscribe'] == "1") {
-					$userlevel_query = $wpdb->prepare("SELECT * FROM {$wpdb->prefix}wp_membership_user_levels AS t1 WHERE t1.User_ID=%s AND t1.User_Level_ID=%s", @$_SESSION['wp-membership_plugin']['wp-membership_user_id'], $_REQUEST['userlevelid']);
-					if($userlevel_row = $wpdb->get_row($userlevel_query, ARRAY_A)) {
-						$plugin = null;
-						if(is_array($this->plugins)) {
-							foreach($this->plugins as $p) {
-								if($p->has_Subscription(@$_REQUEST['userlevelid'])) {
-									$plugin = $p;
-								}
-							}
-							if(!is_null($plugin)) {
-								if($plugin->Uninstall_Subscription($plugin->find_Subscription(@$_REQUEST['userlevelid'])) !== false) {
-									$retval .= '<p>Successfully unsubscribed</p>';
-								}
-								else $retval .= '<p>Failed to unsubscribe</p>';
-							}
-							else $retval .= '<p>Failed to unsubscribe</p>';
-						}
-						else $retval .= '<p>Failed to unsubscribe</p>';
-					}
-					else $retval .= '<p>Failed to unsubscribe</p>';
+				if(@$loaded[$file] === true) {
+					eval('$this->m_Shortcodes[$key]["instance"] = new '.$shortcode['class'].'('.(isset($shortcode['arg']) ? "\$shortcode['arg']" : '').');');
+					add_shortcode($this->m_Shortcodes[$key]['instance']->get_Shortcode(), array(&$this->m_Shortcodes[$key]['instance'], 'Handler'));
 				}
-				$retval .= "<table border=\"0\">";
-				$retval .= "<form action=\"{$_SERVER['PHP_SELF']}?page_id=".urlencode(@$_REQUEST['page_id'])."\" method=\"post\"> <input name=\"do_userprofile\" type=\"hidden\" value=\"1\" />";
-				$retval .= "<tr>";
-				$retval .= "<td>Email</td>";
-				$retval .= "<td><input name=\"email\" type=\"text\" value=\"".htmlentities($user_row['Email'])."\" /></td>";
-				$retval .= "</tr>";
-				if(!is_null($user_row['Username']) && strlen(trim($user_row['Username'])) > 0) {
-					$retval .= "<tr>";
-					$retval .= "<td>Username</td>";
-					$retval .= "<td>".htmlentities($user_row['Username'])."</td>";
-					$retval .= "</tr>";
-				}
-				$retval .= "<tr>";
-				$retval .= "<td>Password</td>";
-				$retval .= "<td><input name=\"password\" type=\"password\" /></td>";
-				$retval .= "</tr>";
-				$retval .= "<tr>";
-				$retval .= "<td>Confirm Password</td>";
-				$retval .= "<td><input name=\"password2\" type=\"password\" /></td>";
-				$retval .= "</tr>";
-				$retval .= "<tr>";
-				$retval .= "<td colspan=\"2\"><input type=\"submit\" value=\"Update\" /></td>";
-				$retval .= "</tr>";
-				$retval .= "</form>";
-				$sub_query = $wpdb->prepare("SELECT * FROM {$wpdb->prefix}wp_membership_user_levels AS t1, {$wpdb->prefix}wp_membership_levels AS t2 WHERE t1.Level_ID=t2.Level_ID AND t1.User_ID=%s", @$_SESSION['wp-membership_plugin']['wp-membership_user_id']);
-				if($sub_rows = $wpdb->get_results($sub_query, ARRAY_A)) {
-					$retval .= "<tr><td colspan=\"2\"><h3>Subscription".(count($sub_rows) == 1 ? "" : "s")."</h3></td></tr>";
-					foreach($sub_rows as $id => $sub_row) {
-						$retval .= "<tr>";
-						$retval .= "<td>".htmlentities($sub_row['Name'])."</td>";
-						$value = (is_null($sub_row['Expiration']) ? "Never Expires" : ((@strtotime($sub_row['Expiration']) - time()) < 0 ? (@strtotime($sub_row['Expiration']) == 0 ? "Pending" : "Expired") : "Expires ".@date("m-d-Y", @strtotime($sub_row['Expiration']))));
-						$plugin = null;
-						if(is_array($this->plugins)) {
-							foreach($this->plugins as $p) {
-								if($p->has_Subscription($sub_row['User_Level_ID'])) {
-									$plugin = $p;
-								}
-							}
-						}
-						if(strlen($value) > 0 && !is_null($plugin)) $value .= "&nbsp;&nbsp;&nbsp;";
-						if(!is_null($plugin)) {
-							if($plugin->has_Unsubscribe_Button()) $value .= $plugin->get_Unsubscribe_Button($sub_row['User_ID'].'_'.$sub_row['Level_Price_ID'], $sub_row['Name'].' @ '.@$_SERVER['HTTP_HOST']);
-							else if($plugin->has_Uninstall_Subscription()) {
-								$value .= "<form action=\"{$_SERVER['PHP_SELF']}?page_id=".urlencode(@$_REQUEST['page_id'])."\" method=\"post\">";
-								$value .= '<input type="hidden" name="do_unsubscribe" value="1" />';
-								$value .= '<input type="hidden" name="userlevelid" value="'.htmlentities($sub_row['User_Level_ID']).'" />';
-								$value .= "<input type=\"submit\" value=\"Unsubscribe\" />";
-								$value .= "</form>";
-							}
-						}
-						$retval .= "<td>$value</td>";
-						$retval .= "</tr>";
-					}
-				}
-				$retval .= "</table>";
 			}
-			
-			return $retval;
 		}
 		
 		function admin_menu_init() {
@@ -349,8 +188,8 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 			$first = true;
 			$parent = "";
 			$basepath = pathinfo($_SERVER['SCRIPT_FILENAME']);
-			$basepath = ereg_replace("/wp-admin\$", "", getcwd());//@$this->basepath['dirname']);
-			$basepath = ereg_replace("/wp-content/plugins/free-wp-membership\$", "", @$this->basepath);
+			$basepath = ereg_replace("/wp-admin\$", "", @$basepath['dirname']);
+			$basepath = ereg_replace("/wp-content/plugins/free-wp-membership\$", "", $basepath);
 			foreach($this->m_SettingsTabs as $name => $tab) {
 				$file = $basepath.'/wp-content/plugins/free-wp-membership/SettingsTabs/'.$name.'.php';
 				if(file_exists($file)) {
@@ -363,6 +202,7 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 					}
 					add_submenu_page($parent, __('WP-Membership '.$tab['title'], 'wp-membership'), __($tab['title'], 'wp-membership'), 8, $this->m_SettingsTabs[$name]['instance']->get_File(), array(&$this->m_SettingsTabs[$name]['instance'], 'DisplayTab'));
 				}
+				else echo 'failed to load '.$file.'<br />';
 			}
 		}
 		
@@ -790,11 +630,8 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 			}
 			
 			$this->basepath = pathinfo($_SERVER['SCRIPT_FILENAME']);
-			$this->basepath = ereg_replace("/wp-admin\$", "", getcwd());//@$this->basepath['dirname']);
-			$this->basepath = ereg_replace("/wp-content/plugins/free-wp-membership\$", "", @$this->basepath);
-			$methods = array();
-			//TODO load data library
-			$methods = @file_get_contents(dirname(__FILE__).'/methods/data_library');
+			$this->basepath = ereg_replace("/wp-admin\$", "", $basepath['dirname']);
+			$this->basepath = ereg_replace("/wp-content/plugins/free-wp-membership\$", "", $basepath);
 
 				$dh = @opendir(dirname(__FILE__).'/plugins');
 				if($dh) {
@@ -1323,531 +1160,6 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 			$page_id = isset($wp_query->queried_object->ID) ? $wp_query->queried_object->ID : @$_REQUEST['page_id'];
 			
 			if(is_array($this->public_messages)) foreach($this->public_messages as $message) $retval = $message.$retval;
-			
-			if($this->is_Register_Page($page_id)) {
-				$register_query = $wpdb->prepare("SELECT * FROM ".$wpdb->prefix."wp_membership_register_pages WHERE LENGTH(Macro) > 0 AND WP_Page_ID=%s", @$_REQUEST['page_id']);
-				if($register_rows = $wpdb->get_results($register_query, ARRAY_A)) {
-					foreach($register_rows as $register_row) {
-						switch(@$_REQUEST['do_register']) {
-							case -1:
-								break;
-							case 0:
-								break;
-							case 1:
-								if(is_email(@$_REQUEST['email']) && strlen(trim(@$_REQUEST['password'])) > 0 && @$_REQUEST['password'] == @$_REQUEST['password2']) {
-									
-								}
-								else {
-									$_REQUEST['do_register'] = 0;
-									if(@$_REQUEST['password'] != @$_REQUEST['password2']) $retval = "Passwords do not match<br />".$retval;
-									if(trim(@$_REQUEST['password']) == "") $retval = "Password cannot be blank<br />".$retval;
-									if(!is_email(@$_REQUEST['email'])) $retval = "A valid email address is required<br />".$retval;
-								}
-								break;
-							case 2:
-								if(is_email(@$_REQUEST['email']) && strlen(trim(@$_REQUEST['password'])) > 0 && @$_REQUEST['password'] == @$_REQUEST['password2']) {
-									$levels = explode("_", @$_REQUEST['wp-membership_level_id']);
-									if(count($levels) > 1) {
-									}
-									else {
-										$_REQUEST['do_register'] = "-1";
-									}
-								}
-								else {
-									$_REQUEST['do_register'] = 0;
-									if(@$_REQUEST['password'] != @$_REQUEST['password2']) $retval = "Passwords do not match<br />".$retval;
-									if(trim(@$_REQUEST['password']) == "") $retval = "Password cannot be blank<br />".$retval;
-									if(!is_email(@$_REQUEST['email'])) $retval = "A valid email address is required<br />".$retval;
-								}
-								break;
-							case 3:
-								$reqs = array(	'billing_name' => "Billing Name",
-												'billing_address' => "Billing Address",
-												'billing_city' => "Billing City",
-												'billing_address' => "Billing Address",
-												'billing_state' => "Billing State",
-												'billing_zip' => "Billing Zip/Postal Code",
-												'billing_country' => "Billing Country",
-												'payment_name' => "Payment Name",
-												'payment_ccnum' => "Payment Card Number",
-												'payment_ccexp_month' => "Payment Card Expiration Month",
-												'payment_ccexp_year' => "Payment Card Expiration Year",
-												'payment_cvv2' => "Payment Security Code");
-								$errors = '';
-								foreach($reqs as $name => $caption) {
-									if(strlen(trim(@$_REQUEST[$name])) <= 0) {
-										if(strlen($errors) > 0) $errors .= '<br />';
-										$errors .= $caption.' can not be empty.';
-										
-									}
-								}
-								if(strlen($errors) > 0) {
-									$_REQUEST['do_register'] = 2;
-									$retval = '<p class="errors">'.$errors.'</p>'.$retval;
-								}
-								else {
-									$level_id = @$_REQUEST['level_id'];
-									$price_id = @$_REQUEST['price_id'];
-									$level = null;
-									$price = null;
-									$duration = null;
-									$delay = null;
-									$level_query = $wpdb->prepare("SELECT * FROM {$wpdb->prefix}wp_membership_levels AS t1 LEFT JOIN {$wpdb->prefix}wp_membership_level_prices AS t2 ON t1.Level_ID=t2.Level_ID WHERE t1.Level_ID=%s AND t2.Level_Price_ID=%s", $level_id, $price_id);
-									if($level_row = $wpdb->get_row($level_query, ARRAY_A)) {
-										$level = $level_row['Name'];
-										$price = $level_row['Price'];
-										$duration = $level_row['Duration'];
-										$delay = $level_row['Delay'];
-									}
-									$user_id = @$_REQUEST['user_id'];
-									$user_query = $wpdb->prepare("SELECT * FROM {$wpdb->prefix}wp_membership_users AS t1 WHERE t1.User_ID=%s", @$_REQUEST['user_id']);
-									if($user_row = $wpdb->get_row($user_query, ARRAY_A)) {
-										$user_id = $user_row['User_ID'];
-									}
-									$subscription = false;
-									$name = "";
-									switch($duration) {
-										case "+1 month":
-											$subscription = true;
-											break;
-										case "+1 year":
-											$subscription = true;
-											break;
-									}
-									$charged = false;
-									$date = @strtotime(@$_REQUEST['payment_ccexp_year'].'-'.@$_REQUEST['payment_ccexp_month'].'-01');
-									$gateway_query = $wpdb->prepare("SELECT * FROM ".$wpdb->prefix."wp_membership_register_pages AS t1 LEFT JOIN ".$wpdb->prefix."wp_membership_register_page_gateways AS t2 ON t1.Register_Page_ID=t2.Register_Page_ID WHERE t1.Register_Page_ID=%s AND t2.Payment_Gateway=%s ORDER BY t2.Payment_Gateway", $register_row['Register_Page_ID'], @$_REQUEST['processor']);
-									if($gateway_row = $wpdb->get_row($gateway_query, ARRAY_A)) {
-										if(isset($this->plugins[$gateway_row['Payment_Gateway']])) {
-											if($subscription) {
-												if($this->plugins[$gateway_row['Payment_Gateway']]->has_Install_Subscription()) {
-													$charged = $this->plugins[$gateway_row['Payment_Gateway']]->Install_Subscription($user_id."_".$price_id, $level." Membership at {$_SERVER['HTTP_HOST']}", $price, @$_REQUEST['payment_ccnum'], $date, @$_REQUEST['payment_cvv2'], @$_REQUEST['payment_name'], @$_REQUEST['billing_name'], @$_REQUEST['billing_address'], @$_REQUEST['billing_address2'], @$_REQUEST['billing_city'], @$_REQUEST['billing_state'], @$_REQUEST['billing_zip'], @$_REQUEST['billing_phone'], @$_REQUEST['billing_country'], $duration, $delay);
-												}
-											}
-											else {
-												if($this->plugins[$gateway_row['Payment_Gateway']]->has_Process_Charge()) {
-													$charged = $this->plugins[$gateway_row['Payment_Gateway']]->Process_Charge($user_id."_".$price_id, $level." Membership at {$_SERVER['HTTP_HOST']}", $price, @$_REQUEST['payment_ccnum'], $date, @$_REQUEST['payment_cvv2'], @$_REQUEST['payment_name'], @$_REQUEST['billing_name'], @$_REQUEST['billing_address'], @$_REQUEST['billing_address2'], @$_REQUEST['billing_city'], @$_REQUEST['billing_state'], @$_REQUEST['billing_zip'], @$_REQUEST['billing_phone'], @$_REQUEST['billing_country']);
-												}
-											}
-										}
-									}
-									if($charged) {
-										$_REQUEST['do_register'] = -1;
-									}
-									else {
-										$_REQUEST['do_register'] = 2;
-										$retval = '<p class="errors">Failed to process card</p>'.$retval;
-									}
-								}
-								break;
-						}
-						$retval = str_replace($register_row['Macro'], $this->default_registerform($register_row), $retval);
-					}
-				}
-			}
-
-			return $retval;
-		}
-		
-		function default_registerform($register_row) {
-			$retval = "";
-			
-			global $wpdb, $wp_query;
-		    load_plugin_textdomain('wp-membership', false, $this->language_path);
-
-			$page_id = isset($wp_query->queried_object->ID) ? $wp_query->queried_object->ID : @$_REQUEST['page_id'];
-			if(is_array($register_row)) {
-				$step = is_numeric(@$_REQUEST['do_register']) ? (int)@$_REQUEST['do_register'] : 0;
-				switch($step) {
-					case -1:
-						$retval .= "<p>".__('Thank you for signing up', 'wp-membership')."</p>";
-						break;
-					case 0:
-						$retval .= "<form action=\"{$_SERVER['PHP_SELF']}?page_id=".urlencode($page_id)."\" method=\"post\">";
-						$retval .= "<input name=\"do_register\" type=\"hidden\" value=\"".($step + 1)."\" />";
-						$retval .= "<input name=\"member_register_page_id\" type=\"hidden\" value=\"".urlencode($register_row['Register_Page_ID'])."\" />";
-						$retval .= "<table class=\"wp_membership register step0\">";
-						$retval .= "<tr>";
-						$retval .= "<td>".__('Email', 'wp-membership')."</td>";
-						$retval .= "<td><input name=\"email\" type=\"text\" value=\"".htmlentities(@$_REQUEST['email'])."\" /></td>";
-						$retval .= "</tr>";
-						$retval .= "<tr>";
-						$retval .= "<td>".__('Password', 'wp-membership')."</td>";
-						$retval .= "<td><input name=\"password\" type=\"password\" /></td>";
-						$retval .= "</tr>";
-						$retval .= "<tr>";
-						$retval .= "<td>".__('Confirm Password', 'wp-membership')."</td>";
-						$retval .= "<td><input name=\"password2\" type=\"password\" /></td>";
-						$retval .= "</tr>";
-						$retval .= "<tr>";
-						$retval .= "<td colspan=\"2\"><input type=\"submit\" value=\"".__('Continue', 'wp-membership')."\" /></td>";
-						$retval .= "</tr>";
-						$retval .= "</table>";
-						$retval .= "</form>";
-						break;
-					case 1:
-						if(isset($this->public_messages['extra_fields_message'])) $retval .= $this->public_messages['extra_fields_message'];
-						$retval .= "<form action=\"{$_SERVER['PHP_SELF']}?page_id=".urlencode($page_id)."\" method=\"post\">";
-						$retval .= "<input name=\"do_register\" type=\"hidden\" value=\"".($step + 1)."\" />";
-						$retval .= "<input name=\"member_register_page_id\" type=\"hidden\" value=\"".urlencode($register_row['Register_Page_ID'])."\" />";
-						$retval .= "<table class=\"wp_membership register step1\">";
-						foreach(array("email", "password", "password2") as $key) $retval .= "<input type=\"hidden\" name=\"$key\" value=\"".htmlentities(@$_REQUEST[$key])."\" />";
-						$extra_fields = @unserialize($register_row['Extra_Fields']);
-						if(!is_array($extra_fields)) $extra_fields = array();
-						foreach($extra_fields as $extra_id => $extra_field) {
-							$caption = isset($extra_field->caption) ? $extra_field->caption : "";
-							$classes = isset($extra_field->classes) ? $extra_field->classes : "";
-							$name = isset($extra_field->name) ? $extra_field->name : "";
-							$default = isset($extra_field->default) ? $extra_field->default : "";
-							$signup = isset($extra_field->signup) ? $extra_field->signup : false;
-							$type = isset($extra_field->type) ? $extra_field->type : "";
-							$parameters = array();
-							$keys = array();
-							$raw_parameters = explode(";", isset($extra_field->parameters) ? $extra_field->parameters : "");
-							foreach($raw_parameters as $raw_parameter) {
-								$values = explode("=", $raw_parameter);
-								if(count($values) == 1) $parameters[] = $values[0];
-								else if(count($values) == 2) {
-									if(isset($parameters[$values[0]])) $parameters[$values[0].(++$keys[$values[0]])] = $values[1];
-									else {
-										$keys[$values[0]] = 1;
-										$parameters[$values[0]] = $values[1];
-									}
-								}
-							}
-							if(!$signup) $type = 'hidden';
-							switch($type) {
-								case "hidden":
-									$retval .= "<input type=\"".htmlentities($type)."\"".(strlen($classes) > 0 ? " classes=\"".htmlentities($classes)."\"" : "")." name=\"wp-membership-extra_fields-".htmlentities($name)."\" value=\"".htmlentities($default)."\" />";
-									break;
-								case 'textarea':
-									$retval .= "<tr valign=\"top\">";
-									$retval .= "<td>".htmlentities($caption)."</td>";
-									$retval .= "<td><textarea name=\"wp-membership-extra_fields-".htmlentities($name)."\"".(strlen($classes) > 0 ? " classes=\"".htmlentities($classes)."\"" : "").(isset($parameters['rows']) ? " rows=\"".htmlentities($parameters['rows'])."\"" : "").(isset($parameters['cols']) ? " cols=\"".htmlentities($parameters['cols'])."\"" : "").">".htmlentities(isset($_REQUEST['wp-membership-extra_fields-'.$name]) ? $_REQUEST['wp-membership-extra_fields-'.$name] : $default)."</textarea></td>";
-									$retval .= "</tr>";
-									break;
-								case 'select':
-									$retval .= "<tr valign=\"top\">";
-									$retval .= "<td>".htmlentities($caption)."</td>";
-									$values = explode(";", $default);
-									$retval .= "<td>";
-									$defaults = explode(',', @$parameters['default']);
-									$retval .= '<select name="wp-membership-extra_fields-'.htmlentities($name).'"'.(strlen($classes) > 0 ? " classes=\"".htmlentities($classes)."\"" : "").(isset($parameters['multiple']) ? " MULTIPLE" : "").(strlen(@$parameters['size']) > 0 ? " size=\"".htmlentities($parameters['size'])."\"" : "").'>';
-									foreach($values as $key => $content) {
-										$data = explode('=', $content);
-										$label = count($data) >= 2 ? $data[0] : null;
-										$value = count($data) >= 2 ? $data[1] : $data[0];
-										$retval .= "<option value=\"".htmlentities($value)."\"";
-										if(isset($_REQUEST['do_register'])) $retval .= @$_REQUEST['wp-membership-extra_fields-'.$name] == $value ? ' SELECTED' : '';
-										else $retval .= (in_array($key, $defaults) ? " SELECTED" : "");
-										$retval .= ">";
-										$retval .= htmlentities(is_null($label) ? $value : $label);
-										$retval .= '</option>';
-									}
-									$retval .= "</td>";
-									$retval .= "</tr>";
-									break;
-								case 'radio':
-									$retval .= "<tr valign=\"top\">";
-									$retval .= "<td>".htmlentities($caption)."</td>";
-									$values = explode(";", $default);
-									$retval .= "<td>";
-									$defaults = explode(',', @$parameters['default']);
-									foreach($values as $key => $content) {
-										$data = explode('=', $content);
-										$label = count($data) >= 2 ? $data[0] : null;
-										$value = count($data) >= 2 ? $data[1] : $data[0];
-										$retval .= "<input name=\"wp-membership-extra_fields-".htmlentities($name)."\"".(strlen($classes) > 0 ? " classes=\"".htmlentities($classes)."\"" : "");
-										if(isset($_REQUEST['do_register'])) $retval .= @$_REQUEST['wp-membership-extra_fields-'.$name] == $value ? ' CHECKED' : '';
-										else $retval .= (in_array($key, $defaults) ? " CHECKED" : "");
-										$retval .= " type=\"radio\" value=\"".htmlentities($value)."\" />";
-										if(!is_null($label)) $retval .= ' '.htmlentities($label);
-									}
-									$retval .= "</td>";
-									$retval .= "</tr>";
-									break;
-								case 'checkbox':
-									$retval .= "<tr valign=\"top\">";
-									$retval .= "<td>".htmlentities($caption)."</td>";
-									$retval .= "<td>";
-									$data = explode('=', $default);
-									$label = count($data) >= 2 ? $data[0] : null;
-									$value = count($data) >= 2 ? $data[1] : $data[0];
-									$retval .= "<input name=\"wp-membership-extra_fields-".htmlentities($name)."\"".(strlen($classes) > 0 ? " classes=\"".htmlentities($classes)."\"" : "");
-									if(isset($_REQUEST['do_register'])) $retval .= @$_REQUEST['wp-membership-extra_fields-'.$name] == $value ? ' CHECKED' : '';
-									else $retval .= (isset($parameters['checked']) && in_array($parameters['checked'], array(1, '1', 't', 'true', true)) ? " CHECKED" : "");
-									$retval .= " type=\"checkbox\" value=\"".htmlentities($value)."\" />";
-									if(!is_null($label)) $retval .= ' '.htmlentities($label);
-									$retval .= "</td>";
-									$retval .= "</tr>";
-									break;
-								case 'text':
-								default:
-									$retval .= "<tr valign=\"top\">";
-									$retval .= "<td>".htmlentities($caption)."</td>";
-									$retval .= "<td><input name=\"wp-membership-extra_fields-".htmlentities($name)."\"".(strlen($classes) > 0 ? " classes=\"".htmlentities($classes)."\"" : "").(isset($parameters['size']) ? " size=\"".htmlentities($parameters['size'])."\"" : "").(isset($parameters['maxlength']) ? " maxlength=\"".htmlentities($parameters['maxlength'])."\"" : "")." type=\"text\" value=\"".htmlentities(isset($_REQUEST['wp-membership-extra_fields-'.$name]) ? $_REQUEST['wp-membership-extra_fields-'.$name] : $default)."\" /></td>";
-									$retval .= "</tr>";
-									break;
-							}
-						}
-						$level_query = $wpdb->prepare("SELECT t1.Register_Page_ID, t3.Level_ID, t3.Name, t3.Description, t4.Level_Price_ID, t4.Price, t4.Duration, t4.Delay FROM ".$wpdb->prefix."wp_membership_register_pages AS t1 LEFT JOIN ".$wpdb->prefix."wp_membership_register_page_levels AS t2 ON t1.Register_Page_ID=t2.Register_Page_ID LEFT JOIN ".$wpdb->prefix."wp_membership_levels AS t3 ON t2.Level_ID=t3.Level_ID LEFT JOIN ".$wpdb->prefix."wp_membership_level_prices AS t4 ON t3.Level_ID=t4.Level_ID WHERE t3.Level_ID IS NOT NULL AND t1.Register_Page_ID=%s ORDER BY t3.Name, t4.Price", $register_row['Register_Page_ID']);
-						if($level_rows = $wpdb->get_results($level_query, ARRAY_A)) {
-							$retval .= "<tr valign=\"top\">";
-							$retval .= "<td>".__('Membership Level', 'wp-membership')."</td>";
-							$retval .= "<td>";
-							$first = true;
-							$only_free = true;
-							foreach($level_rows as $level_row) {
-								if(!$first) $retval .= "<br />";
-								$retval .= "<input type=\"radio\" name=\"wp-membership_level_id\" value=\"".htmlentities($level_row['Level_ID']);
-								if($level_row['Level_Price_ID'] !== null) $retval .= "_".htmlentities($level_row['Level_Price_ID']);
-								$retval .= "\"".($first ? " CHECKED" : "")." />";
-								$retval .= " ".htmlentities($level_row['Name']);
-								if($level_row['Level_Price_ID'] !== null) {
-									$only_free = false;
-									$retval .= " - ".trim($this->my_money_format('%(n', $level_row['Price']));
-								    load_plugin_textdomain('wp-membership', false, 'wp-membership');
-									switch($level_row['Duration']) {
-										case "":
-											$retval .= " ".__('one time charge', 'wp-membership');
-											break;
-										case "+1 week":
-											$retval .= " ".__('per week', 'wp-membership');
-											break;
-										case "+1 month":
-											$retval .= " ".__('per month', 'wp-membership');
-											break;
-										case "+1 year":
-											$retval .= " ".__('per year', 'wp-membership');
-											break;
-									}
-									switch($level_row['Delay']) {
-										case "+3 days":
-											$retval .= ", ".__('with a 3 day free trial', 'wp-membership');
-											break;
-										case "+1 week":
-											$retval .= ", ".__('with a 1 week free trial', 'wp-membership');
-											break;
-										case "+1 month":
-											$retval .= ", ".__('with a 1 month free trial', 'wp-membership');
-											break;
-										case "+1 year":
-											$retval .= ", ".__('with a 1 year free trial', 'wp-membership');
-											break;
-									}
-								}
-								else $retval .= " - ".__('Free', 'wp-membership');
-								if($first) $first = false;
-							}
-							$retval .= "</td>";
-							$retval .= "</tr>";
-						}
-						$retval .= "<tr>";
-						$retval .= "<td colspan=\"2\"><input type=\"submit\" value=\"".($only_free ? __('Register', 'wp-membership') : __('Continue', 'wp-membership'))."\" /></td>";
-						$retval .= "</tr>";
-						$retval .= "</table>";
-						$retval .= "</form>";
-						break;
-					case 2:
-						$retval .= __('Email', 'wp-membership').": ".htmlentities(@$_REQUEST['email'])."<br />";
-						$level_id = null;
-						$price_id = null;
-						$levelprice = explode("_", @$_REQUEST['wp-membership_level_id']);
-						if(count($levelprice) == 1) {
-							$level_id = $levelprice[0];
-						}
-						else if(count($levelprice) == 2) {
-							$level_id = $levelprice[0];
-							$price_id = $levelprice[1];
-						}
-						$level = null;
-						$price = null;
-						$duration = null;
-						$delay = null;
-						$level_query = $wpdb->prepare("SELECT * FROM {$wpdb->prefix}wp_membership_levels AS t1 LEFT JOIN {$wpdb->prefix}wp_membership_level_prices AS t2 ON t1.Level_ID=t2.Level_ID WHERE t1.Level_ID=%s AND t2.Level_Price_ID=%s", $level_id, $price_id);
-						if($level_row = $wpdb->get_row($level_query, ARRAY_A)) {
-							$level = $level_row['Name'];
-							$price = $level_row['Price'];
-							$duration = $level_row['Duration'];
-							$delay = $level_row['Delay'];
-						}
-						$user_id = null;
-						$user_query = $wpdb->prepare("SELECT * FROM {$wpdb->prefix}wp_membership_users AS t1 WHERE t1.Email=%s", @$_REQUEST['email']);
-						if($user_row = $wpdb->get_row($user_query, ARRAY_A)) {
-							$user_id = $user_row['User_ID'];
-						}
-						$retval .= __('Level', 'wp-membership').": ".htmlentities($level." - ".trim($this->my_money_format('%(n', $price)));
-					    load_plugin_textdomain('wp-membership', false, $this->language_path);
-						$subscription = false;
-						$name = "";
-						switch($duration) {
-							case "":
-								$retval .= " ".__('one time charge', 'wp-membership');
-								break;
-							case "+1 week":
-								$retval .= " ".__('per week', 'wp-membership');
-								$subscription = true;
-								break;
-							case "+1 month":
-								$retval .= " ".__('per month', 'wp-membership');
-								$subscription = true;
-								break;
-							case "+1 year":
-								$retval .= " ".__('per year', 'wp-membership');
-								$subscription = true;
-								break;
-						}
-						switch($delay) {
-							case "+3 days":
-								$retval .= ", ".__('with a 3 day free trial', 'wp-membership');
-								break;
-							case "+1 week":
-								$retval .= ", ".__('with a 1 week free trial', 'wp-membership');
-								break;
-							case "+1 month":
-								$retval .= ", ".__('with a 1 month free trial', 'wp-membership');
-								break;
-							case "+1 year":
-								$retval .= ", ".__('with a 1 year free trial', 'wp-membership');
-								break;
-						}
-						$gateway_query = $wpdb->prepare("SELECT * FROM ".$wpdb->prefix."wp_membership_register_pages AS t1 LEFT JOIN ".$wpdb->prefix."wp_membership_register_page_gateways AS t2 ON t1.Register_Page_ID=t2.Register_Page_ID WHERE t1.Register_Page_ID=%s ORDER BY t2.Payment_Gateway", $register_row['Register_Page_ID']);
-						if($gateway_rows = $wpdb->get_results($gateway_query, ARRAY_A)) {
-							$buttons = false;
-							foreach($gateway_rows as $gateway_row) {
-								if(isset($this->plugins[$gateway_row['Payment_Gateway']])) {
-									if($subscription) {
-										if($this->plugins[$gateway_row['Payment_Gateway']]->has_Subscription_Button()) {
-											$retval .= $this->plugins[$gateway_row['Payment_Gateway']]->get_Subscription_Button($user_id."_".$price_id, $level." ".__('Membership at', 'wp-membership')." {$_SERVER['HTTP_HOST']}", $price, $duration, $delay);
-											$buttons = true;
-										}
-									}
-									else {
-										if($this->plugins[$gateway_row['Payment_Gateway']]->has_BuyNow_Button()) {
-											$retval .= $this->plugins[$gateway_row['Payment_Gateway']]->get_BuyNow_Button($user_id."_".$price_id, $level." ".__('Membership at', 'wp-membership')." {$_SERVER['HTTP_HOST']}", $price);
-											$buttons = true;
-										}
-									}
-								}
-							}
-							$gateways = array();
-							foreach($gateway_rows as $gateway_row) {
-								if(isset($this->plugins[$gateway_row['Payment_Gateway']])) {
-									if($subscription) {
-										if($this->plugins[$gateway_row['Payment_Gateway']]->has_Install_Subscription()) {
-											$gateways[$gateway_row['Payment_Gateway']] = $this->plugins[$gateway_row['Payment_Gateway']];
-										}
-									}
-									else {
-										if($this->plugins[$gateway_row['Payment_Gateway']]->has_Process_Charge()) {
-											$gateways[$gateway_row['Payment_Gateway']] = $this->plugins[$gateway_row['Payment_Gateway']];
-										}
-									}
-								}
-							}
-							if($buttons && count($gateways) > 0) $retval .= "<p>Or</p>";
-							if(count($gateways) > 0) {
-								$retval .= "<p class=\"required\">* ".__('indicates a required field', 'wp-membership')."</p>";
-								$retval .= "<form action=\"{$_SERVER['PHP_SELF']}?page_id=".urlencode($page_id)."\" method=\"post\">";
-								$retval .= "<input name=\"do_register\" type=\"hidden\" value=\"".($step + 1)."\" />";
-								$retval .= "<input name=\"user_id\" type=\"hidden\" value=\"".($user_id)."\" />";
-								$retval .= "<input name=\"price_id\" type=\"hidden\" value=\"".($price_id)."\" />";
-								$retval .= "<input name=\"level_id\" type=\"hidden\" value=\"".($level_id)."\" />";
-								foreach(array("email", "password", "password2", "wp-membership_level_id") as $key) $retval .= "<input type=\"hidden\" name=\"$key\" value=\"".htmlentities(@$_REQUEST[$key])."\" />";
-								$retval .= "<table>";
-								$retval .= "<tr>";
-								$retval .= "<th align=\"left\" colspan=\"2\">".__('Billing Address', 'wp-membership')."</th>";
-								$retval .= "</tr>";
-								$retval .= "<tr>";
-								$retval .= "<th align=\"left\"><span class=\"required\">*</span>".__('Name', 'wp-membership')."</th>";
-								$retval .= "<td><input type=\"text\" name=\"billing_name\" value=\"".htmlentities(@$_REQUEST['billing_name'])."\" /></td>";
-								$retval .= "</tr>";
-								$retval .= "<tr>";
-								$retval .= "<th align=\"left\"><span class=\"required\">*</span>".__('Address', 'wp-membership')."</th>";
-								$retval .= "<td><input type=\"text\" name=\"billing_address\" value=\"".htmlentities(@$_REQUEST['billing_address'])."\" /></td>";
-								$retval .= "</tr>";
-								$retval .= "<tr>";
-								$retval .= "<th align=\"left\">".__('Address (Line 2)', 'wp-membership')."</th>";
-								$retval .= "<td><input type=\"text\" name=\"billing_address2\" value=\"".htmlentities(@$_REQUEST['billing_address2'])."\" /></td>";
-								$retval .= "</tr>";
-								$retval .= "<tr>";
-								$retval .= "<th align=\"left\"><span class=\"required\">*</span>".__('City', 'wp-membership')."</th>";
-								$retval .= "<td><input type=\"text\" name=\"billing_city\" value=\"".htmlentities(@$_REQUEST['billing_city'])."\" /></td>";
-								$retval .= "</tr>";
-								$retval .= "<tr align=\"left\">";
-								$retval .= "<th><span class=\"required\">*</span>".__('State', 'wp-membership')."</th>";
-								$retval .= "<td><input type=\"text\" name=\"billing_state\" value=\"".htmlentities(@$_REQUEST['billing_state'])."\" /></td>";
-								$retval .= "</tr>";
-								$retval .= "<tr>";
-								$retval .= "<th align=\"left\"><span class=\"required\">*</span>".__('Zip / Postal Code', 'wp-membership')."</th>";
-								$retval .= "<td><input type=\"text\" name=\"billing_zip\" value=\"".htmlentities(@$_REQUEST['billing_zip'])."\" /></td>";
-								$retval .= "</tr>";
-								$retval .= "<tr>";
-								$retval .= "<th align=\"left\"><span class=\"required\">*</span>".__('Country', 'wp-membership')."</th>";
-								$retval .= "<td><input type=\"text\" name=\"billing_country\" value=\"".htmlentities(@$_REQUEST['billing_country'])."\" /></td>";
-								$retval .= "</tr>";
-								$retval .= "<tr>";
-								$retval .= "<th align=\"left\">".__('Phone', 'wp-membership')."</th>";
-								$retval .= "<td><input type=\"text\" name=\"billing_phone\" value=\"".htmlentities(@$_REQUEST['billing_phone'])."\" /></td>";
-								$retval .= "</tr>";
-								$retval .= "<tr>";
-								$retval .= "<th align=\"left\" colspan=\"2\">".__('Payment Information', 'wp-membership')."</th>";
-								$retval .= "</tr>";
-								if(count($gateways) > 1) {
-									$retval .= "<tr valign=\"top\">";
-									$retval .= "<th align=\"left\"><span class=\"required\">*</span>".__('Payment Processor', 'wp-membership')."</th>";
-									$retval .= "<td>";
-									$processors = "";
-									foreach($gateways as $key => $gateway) {
-										if(strlen($processors) > 0) $processors .= "<br />";
-										$processors .= "<input type=\"radio\" name=\"processor\" value=\"".htmlentities($key)."\" /> ".htmlentities($gateway->get_Name());
-									}
-									$retval .= "</td>";
-									$retval .= "</tr>";
-								}
-								else $retval .= "<input type=\"hidden\" name=\"processor\" value=\"".htmlentities(@implode("", array_keys($gateways)))."\" />";
-								$retval .= "<tr>";
-								$retval .= "<th align=\"left\"><span class=\"required\">*</span>".__('Name on the Card', 'wp-membership')."</th>";
-								$retval .= "<td><input type=\"text\" name=\"payment_name\" /></td>";
-								$retval .= "</tr>";
-								$retval .= "<tr>";
-								$retval .= "<th align=\"left\"><span class=\"required\">*</span>".__('Card Number', 'wp-membership')."</th>";
-								$retval .= "<td><input type=\"text\" name=\"payment_ccnum\" /></td>";
-								$retval .= "</tr>";
-								$retval .= "<tr>";
-								$retval .= "<th align=\"left\"><span class=\"required\">*</span>".__('Card Expiration', 'wp-membership')."</th>";
-								$retval .= "<td>".__('Month', 'wp-membership').": <select name=\"payment_ccexp_month\"><option value=\"\">[Choose One]</option>";
-								$start = strtotime("Jan");
-								for($date = $start; $date < strtotime("+1 year", $start); $date = strtotime("+1 month", $date)) {
-									$retval .= "<option value=\"".date("m", $date)."\">".date("n - F", $date)."</option>";
-								}
-								$retval .= "</select>";
-								$retval .= " / ".__('Year', 'wp-membership').": <select name=\"payment_ccexp_year\"><option value=\"\">[Choose One]</option>";
-								$start = strtotime("now");
-								for($date = $start; $date < strtotime("+20 years", $start); $date = strtotime("+1 year", $date)) {
-									$retval .= "<option value=\"".date("Y", $date)."\">".date("Y", $date)."</option>";
-								}
-								$retval .= "</select>";
-								$retval .= "</td>";
-								$retval .= "</tr>";
-								$retval .= "<tr>";
-								$retval .= "<th align=\"left\"><span class=\"required\">*</span>".__('Security Code', 'wp-membership')."</th>";
-								$retval .= "<td><input type=\"text\" name=\"payment_cvv2\" size=\"3\" /></td>";
-								$retval .= "</tr>";
-								$retval .= "<tr>";
-								$retval .= "<td colspan=\"2\" align=\"right\"><input type=\"submit\" value=\"".__('Process', 'wp-membership')."\" /></td>";
-								$retval .= "</tr>";
-								$retval .= "</table>";
-								$retval .= "</form>";
-							}
-						}
-						break;
-					case 3:
-						break;
-					default:
-						break;
-				}
-			}
 			
 			return $retval;
 		}

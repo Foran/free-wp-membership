@@ -155,7 +155,7 @@ if(isset($wp_membership_plugin) && class_exists('wp_membership_plugin') && is_a(
 						</tr>
 						
 						<tr valign="top">
-						<th scope="row">Default Page Macro</th>
+						<th scope="row">Default Page Shortcode</th>
 						<td><input type="text" name="wp-membership_macro" value="<?php echo htmlentities($register_row['Macro']); ?>" /></td>
 						</tr>
 						
@@ -769,8 +769,8 @@ if(isset($wp_membership_plugin) && class_exists('wp_membership_plugin') && is_a(
 					</tr>
 					
 					<tr valign="top">
-					<th scope="row">Default Page Macro</th>
-					<td><input type="text" name="wp-membership_macro" value="[Register Page]" /></td>
+					<th scope="row">Default Page Shortcode</th>
+					<td><input type="text" name="wp-membership_macro" value="RegisterPage" /></td>
 					</tr>
 					
 					<tr valign="top">
