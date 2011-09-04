@@ -56,12 +56,10 @@ if(isset($wp_membership_plugin) && class_exists('wp_membership_plugin') && is_a(
 					}
 					$options = array(	"wp-membership_access_denied_page_id",
 										"wp-membership_logout_page_id",
-										"wp-membership_loginfrom_macro",
-										"wp-membership_login_page_id",
+										"wp-membership_loginform_shortcode",
 										"wp-membership_login_prompt_forgot_password",
 										"wp-membership_logged_in_page_id",
-										"wp-membership_user_profile_from_macro",
-										"wp-membership_user_profile_page_id",
+										"wp-membership_user_profile_from_shortcode",
 										"wp-membership_httpproxy_address",
 										"wp-membership_httpproxy_port",
 										"wp-membership_httpsproxy_address",
@@ -141,19 +139,8 @@ if(isset($wp_membership_plugin) && class_exists('wp_membership_plugin') && is_a(
 				</tr>
 	
 				<tr valign="top">
-				<th scope="row">Login Form Macro</th>
-				<td><input type="text" name="wp-membership_loginfrom_macro" value="<?php echo get_option('wp-membership_loginfrom_macro'); ?>" /></td>
-				</tr>
-				
-				<tr valign="top">
-				<th scope="row">Login Page</th>
-				<td><select name="wp-membership_login_page_id"><?php
-				foreach($pages as $page) {
-					echo "<option value=\"".htmlentities($page->ID)."\"";
-					if(get_option('wp-membership_login_page_id') == $page->ID) echo " SELECTED";
-					echo ">".htmlentities($page->post_title)."</option>";
-				}
-				?></select></td>
+				<th scope="row">Login Form Shortcode</th>
+				<td><input type="text" name="wp-membership_loginform_shortcode" value="<?php echo get_option('wp-membership_loginform_shortcode'); ?>" /></td>
 				</tr>
 	
 				<tr valign="top">
@@ -174,18 +161,7 @@ if(isset($wp_membership_plugin) && class_exists('wp_membership_plugin') && is_a(
 				
 				<tr valign="top">
 				<th scope="row">User Profile Form Macro</th>
-				<td><input type="text" name="wp-membership_user_profile_from_macro" value="<?php echo get_option('wp-membership_user_profile_from_macro'); ?>" /></td>
-				</tr>
-				
-				<tr valign="top">
-				<th scope="row">User Profile Page</th>
-				<td><select name="wp-membership_user_profile_page_id"><?php
-				foreach($pages as $page) {
-					echo "<option value=\"".htmlentities($page->ID)."\"";
-					if(get_option('wp-membership_user_profile_page_id') == $page->ID) echo " SELECTED";
-					echo ">".htmlentities($page->post_title)."</option>";
-				}
-				?></select></td>
+				<td><input type="text" name="wp-membership_user_profile_from_shortcode" value="<?php echo get_option('wp-membership_user_profile_from_shortcode'); ?>" /></td>
 				</tr>
 				</table>
 				

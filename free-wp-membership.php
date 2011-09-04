@@ -65,7 +65,7 @@ if(version_compare(PHP_VERSION, $wp_membership_min_php_version, '>=') && !interf
 	}
 }
 
-if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_membership_min_php_version, '>=') && function_exists("curl_init") && function_exists('simplexml_load_string')) {
+if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_membership_min_php_version, '>=') && function_exists('simplexml_load_string')) {
 	class wp_membership_plugin {
 		private $plugins = array();
 		private $m_SettingsTabs = array();
@@ -94,9 +94,9 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 			add_option("wp-membership_login_page_id", "1");
 			add_option("wp-membership_login_prompt_forgot_password", "0");
 			add_option("wp-membership_logged_in_page_id", "1");
-			add_option("wp-membership_loginfrom_macro", "[Login Form]");
+			add_option("wp-membership_loginform_shortcode", "LoginForm");
 			add_option("wp-membership_user_profile_page_id", "1");
-			add_option("wp-membership_user_profile_from_macro", "[User Profile]");
+			add_option("wp-membership_user_profile_from_shortcode", "UserProfile");
 			add_option("wp-membership_apply_update", false);
 			add_option("wp-membership_cache", false);
 			add_option("wp-membership_admin_menu_location", array('Settings'));
@@ -143,8 +143,205 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 			//add_action('edit_category_form', array(&$this, 'edit_category_form'));
 			add_filter('getarchives_where', array(&$this, "search"));
 
+			add_shortcode(get_option('wp-membership_loginform_shortcode'), array(&$this, 'shortcode_LoginForm'));
+			add_shortcode(get_option('wp-membership_user_profile_from_shortcode'), array(&$this, 'shortcode_UserProfileForm'));
 
 			$methods = array();
+		}
+		
+		/**
+		 * Shortcode handler for the Login Form
+		 *
+		 * @param array $atts array of attributes
+		 * @param string $content text within enclosing form of shortcode element
+		 * @param string $code the shortcode found, when == callback name
+		 * @return unknown
+		 */
+		function shortcode_LoginForm($atts, $content=null, $code="") {
+			$retval = "";
+
+			global $wpdb, $wp_query;
+			
+			$attributes = shortcode_atts(array('show_forgot_password' => get_option('wp-membership_login_prompt_forgot_password')), $atts);
+			
+		    load_plugin_textdomain('wp-membership', false, $this->language_path);
+
+		    $page_id = isset($wp_query->queried_object->ID) ? $wp_query->queried_object->ID : "";
+		    
+		    if(@$_REQUEST['forgot_password'] == "1") {
+				$retval .= "<form action=\"{$_SERVER['PHP_SELF']}?page_id=".urlencode($page_id)."\" method=\"post\"> <input name=\"do_forgot_password\" type=\"hidden\" value=\"1\" />";
+				$retval .= "<table border=\"0\">";
+				$retval .= "<tbody>";
+				$retval .= "<tr>";
+				$retval .= "<td>".__('Email', 'wp-membership');
+				$username_query = $wpdb->prepare("SELECT COUNT(*) AS Total FROM {$wpdb->prefix}wp_membership_users WHERE Username!=NULL");
+				if($username_row = $wpdb->get_row($username_query, ARRAY_A)) {
+					if($username_row['Total'] > 0) $retval .= " / ".__('Username', 'wp-membership');
+				}
+				$retval .= "</td>";
+				$retval .= "<td><input style=\"background-color: #ffffa0;\" name=\"email\" type=\"text\" value=\"".htmlentities(@$_REQUEST['email'])."\" /></td>";
+				$retval .= "</tr>";
+				$retval .= "<tr>";
+				$retval .= "<td colspan=\"2\"><input type=\"submit\" value=\"".__('Forgot Password', 'wp-membership')."\" /></td>";
+				$retval .= "</tr>";
+				$retval .= "</tbody></table>";
+				$retval .= "</form>";
+			}
+			else {
+				if(is_null($content) || trim($content) == '') {
+					$retval .= "<form action=\"{$_SERVER['PHP_SELF']}?page_id=".urlencode($page_id)."\" method=\"post\"> <input name=\"do_login\" type=\"hidden\" value=\"1\" />";
+					$retval .= "<table border=\"0\">";
+					$retval .= "<tbody>";
+					$retval .= "<tr>";
+					$retval .= "<td>".__('Email', 'wp-membership');
+					$username_query = $wpdb->prepare("SELECT COUNT(*) AS Total FROM {$wpdb->prefix}wp_membership_users WHERE Username!=NULL");
+					if($username_row = $wpdb->get_row($username_query, ARRAY_A)) {
+						if($username_row['Total'] > 0) $retval .= " / ".__('Username', 'wp-membership');
+					}
+					$retval .= "</td>";
+					$retval .= "<td><input style=\"background-color: #ffffa0;\" name=\"email\" type=\"text\" /></td>";
+					$retval .= "</tr>";
+					$retval .= "<tr>";
+					$retval .= "<td>".__('Password', 'wp-membership')."</td>";
+					$retval .= "<td><input name=\"password\" type=\"password\" /></td>";
+					$retval .= "</tr>";
+					$retval .= "<tr>";
+					$retval .= "<td colspan=\"2\"><input type=\"submit\" value=\"".__('Login', 'wp-membership')."\" /></td>";
+					$retval .= "</tr>";
+					$retval .= "</tbody></table>";
+					$retval .= "</form>";
+				}
+				else $retval .= $content;
+	    		if($attributes['show_forgot_password'] == "1") {
+	    			$retval .= "<div class=\"prompt_password\"><a href=\"{$_SERVER['PHP_SELF']}?page_id=".urlencode($page_id)."&forgot_password=1&email=".urlencode(@$_REQUEST['email'])."\">Forgot Password?</a></div>";
+	    		}
+			}
+			
+			return $retval;
+		}
+		
+		function shortcode_UserProfileForm($atts, $content=null, $code="") {
+			$retval = "";
+			
+			global $wpdb;
+
+			$user_query = $wpdb->prepare("SELECT * FROM {$wpdb->prefix}wp_membership_users AS t1 WHERE t1.User_ID=%s", @$_SESSION['wp-membership_plugin']['wp-membership_user_id']);
+			if($user_row = $wpdb->get_row($user_query, ARRAY_A)) {
+				if(@$_REQUEST['do_userprofile'] == "1") {
+					if(strlen(trim(@$_REQUEST['password'])) > 0 || strlen(trim(@$_REQUEST['password2'])) > 0) {
+						if(strlen(trim(@$_REQUEST['password'])) > 0) {
+							if(trim(@$_REQUEST['password']) == trim(@$_REQUEST['password2'])) {
+								$update_query = $wpdb->prepare("UPDATE {$wpdb->prefix}wp_membership_users SET Password=PASSWORD(%s) WHERE User_ID=%s", trim(@$_REQUEST['password']), $user_row['User_ID']);
+								if($wpdb->query($update_query) !== false) {
+							    	$update_query = $wpdb->prepare("UPDATE ".$wpdb->prefix."wp_membership_users SET WP_Password=%s WHERE User_ID=%s", wp_hash_password(trim(@$_REQUEST['password'])), $user_row['User_ID']);
+						    		$wpdb->query($update_query);
+									$retval .= "<p>Successfully Updated Password</p>";
+								}
+								else {
+									$retval .= "<p>Failed to update password</p>";
+								}
+							}
+							else {
+								$retval .= "<p>Passwords must match</p>";
+							}
+						}
+						else {
+							$retval .= "<p>Password can not be blank</p>";
+						}
+					}
+					$update_query = $wpdb->prepare("UPDATE {$wpdb->prefix}wp_membership_users SET Email=%s WHERE User_ID=%s", trim(@$_REQUEST['email']), $user_row['User_ID']);
+					if($wpdb->query($update_query) !== false) {
+						$retval .= "<p>Successfully Updated Profile</p>";
+						$user_query = $wpdb->prepare("SELECT * FROM {$wpdb->prefix}wp_membership_users AS t1 WHERE t1.User_ID=%s", @$_SESSION['wp-membership_plugin']['wp-membership_user_id']);
+						$tmp = $user_row;
+						if(!($user_row = $wpdb->get_row($user_query, ARRAY_A))) {
+							$user_row = $tmp;
+						}
+					}
+					else {
+						$retval .= "<p>Failed to update profile</p>";
+					}
+				}
+				else if(@$_REQUEST['do_unsubscribe'] == "1") {
+					$userlevel_query = $wpdb->prepare("SELECT * FROM {$wpdb->prefix}wp_membership_user_levels AS t1 WHERE t1.User_ID=%s AND t1.User_Level_ID=%s", @$_SESSION['wp-membership_plugin']['wp-membership_user_id'], $_REQUEST['userlevelid']);
+					if($userlevel_row = $wpdb->get_row($userlevel_query, ARRAY_A)) {
+						$plugin = null;
+						if(is_array($this->plugins)) {
+							foreach($this->plugins as $p) {
+								if($p->has_Subscription(@$_REQUEST['userlevelid'])) {
+									$plugin = $p;
+								}
+							}
+							if(!is_null($plugin)) {
+								if($plugin->Uninstall_Subscription($plugin->find_Subscription(@$_REQUEST['userlevelid'])) !== false) {
+									$retval .= '<p>Successfully unsubscribed</p>';
+								}
+								else $retval .= '<p>Failed to unsubscribe</p>';
+							}
+							else $retval .= '<p>Failed to unsubscribe</p>';
+						}
+						else $retval .= '<p>Failed to unsubscribe</p>';
+					}
+					else $retval .= '<p>Failed to unsubscribe</p>';
+				}
+				$retval .= "<table border=\"0\">";
+				$retval .= "<form action=\"{$_SERVER['PHP_SELF']}?page_id=".urlencode(@$_REQUEST['page_id'])."\" method=\"post\"> <input name=\"do_userprofile\" type=\"hidden\" value=\"1\" />";
+				$retval .= "<tr>";
+				$retval .= "<td>Email</td>";
+				$retval .= "<td><input name=\"email\" type=\"text\" value=\"".htmlentities($user_row['Email'])."\" /></td>";
+				$retval .= "</tr>";
+				if(!is_null($user_row['Username']) && strlen(trim($user_row['Username'])) > 0) {
+					$retval .= "<tr>";
+					$retval .= "<td>Username</td>";
+					$retval .= "<td>".htmlentities($user_row['Username'])."</td>";
+					$retval .= "</tr>";
+				}
+				$retval .= "<tr>";
+				$retval .= "<td>Password</td>";
+				$retval .= "<td><input name=\"password\" type=\"password\" /></td>";
+				$retval .= "</tr>";
+				$retval .= "<tr>";
+				$retval .= "<td>Confirm Password</td>";
+				$retval .= "<td><input name=\"password2\" type=\"password\" /></td>";
+				$retval .= "</tr>";
+				$retval .= "<tr>";
+				$retval .= "<td colspan=\"2\"><input type=\"submit\" value=\"Update\" /></td>";
+				$retval .= "</tr>";
+				$retval .= "</form>";
+				$sub_query = $wpdb->prepare("SELECT * FROM {$wpdb->prefix}wp_membership_user_levels AS t1, {$wpdb->prefix}wp_membership_levels AS t2 WHERE t1.Level_ID=t2.Level_ID AND t1.User_ID=%s", @$_SESSION['wp-membership_plugin']['wp-membership_user_id']);
+				if($sub_rows = $wpdb->get_results($sub_query, ARRAY_A)) {
+					$retval .= "<tr><td colspan=\"2\"><h3>Subscription".(count($sub_rows) == 1 ? "" : "s")."</h3></td></tr>";
+					foreach($sub_rows as $id => $sub_row) {
+						$retval .= "<tr>";
+						$retval .= "<td>".htmlentities($sub_row['Name'])."</td>";
+						$value = (is_null($sub_row['Expiration']) ? "Never Expires" : ((@strtotime($sub_row['Expiration']) - time()) < 0 ? (@strtotime($sub_row['Expiration']) == 0 ? "Pending" : "Expired") : "Expires ".@date("m-d-Y", @strtotime($sub_row['Expiration']))));
+						$plugin = null;
+						if(is_array($this->plugins)) {
+							foreach($this->plugins as $p) {
+								if($p->has_Subscription($sub_row['User_Level_ID'])) {
+									$plugin = $p;
+								}
+							}
+						}
+						if(strlen($value) > 0 && !is_null($plugin)) $value .= "&nbsp;&nbsp;&nbsp;";
+						if(!is_null($plugin)) {
+							if($plugin->has_Unsubscribe_Button()) $value .= $plugin->get_Unsubscribe_Button($sub_row['User_ID'].'_'.$sub_row['Level_Price_ID'], $sub_row['Name'].' @ '.@$_SERVER['HTTP_HOST']);
+							else if($plugin->has_Uninstall_Subscription()) {
+								$value .= "<form action=\"{$_SERVER['PHP_SELF']}?page_id=".urlencode(@$_REQUEST['page_id'])."\" method=\"post\">";
+								$value .= '<input type="hidden" name="do_unsubscribe" value="1" />';
+								$value .= '<input type="hidden" name="userlevelid" value="'.htmlentities($sub_row['User_Level_ID']).'" />';
+								$value .= "<input type=\"submit\" value=\"Unsubscribe\" />";
+								$value .= "</form>";
+							}
+						}
+						$retval .= "<td>$value</td>";
+						$retval .= "</tr>";
+					}
+				}
+				$retval .= "</table>";
+			}
+			
+			return $retval;
 		}
 		
 		function admin_menu_init() {
@@ -483,10 +680,6 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 						<?php
 		}
 		
-		function check_function($name) {
-			return strlen(@$this->methods[$name]) > 0 ? true : false;
-		}
-		
 		function search($where) {
 			global $wpdb;
 			
@@ -693,7 +886,8 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 			}
 			$page_id = isset($page->queried_object->ID) ? $page->queried_object->ID : @$_REQUEST['page_id'];
 			
-		    if($page_id == get_option("wp-membership_login_page_id") && @$_REQUEST['do_login'] == "1") {
+			//TODO: Detect if the content was passed from a login_shortcode
+			if(@$_REQUEST['do_login'] == "1") {
 		    	$user_query = $wpdb->prepare("SELECT * FROM ".$wpdb->prefix."wp_membership_users AS t1 WHERE (SELECT COUNT(*) FROM ".$wpdb->prefix."wp_membership_user_levels AS t2 WHERE t1.User_ID=t2.User_ID AND (t2.Expiration IS NULL OR t2.Expiration>=NOW()))>0 AND (t1.Email=%s OR t1.Username=%s) AND t1.Password=PASSWORD(%s)", @$_REQUEST['email'], @$_REQUEST['email'], @$_REQUEST['password']);
 		    	if($user_row = $wpdb->get_row($user_query, ARRAY_A)) {
 					$_SESSION['wp-membership_plugin']['wp-membership_user_id'] = $user_row['User_ID'];
@@ -702,10 +896,10 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 				    exit;
 		    	}
 		    	else if(!isset($this->public_messages['bad_password'])) {
-		    		$this->public_messages['prompt_password'] = "<div class=\"login_error\">Error: Bad Email or Password.</div>";
+		    		$retval .= "<div class=\"login_error\">Error: Bad Email or Password.</div>";
 		    	}
 		    }
-		    else if(!isset($this->public_messages['do_password_reset']) && $page_id == get_option("wp-membership_login_page_id") && get_option('wp-membership_login_prompt_forgot_password') == "1" && @$_REQUEST['do_forgot_password'] == "1") {
+		    else if(!isset($this->public_messages['do_password_reset']) && get_option('wp-membership_login_prompt_forgot_password') == "1" && @$_REQUEST['do_forgot_password'] == "1") {
 		    	$user_query = $wpdb->prepare("SELECT * FROM ".$wpdb->prefix."wp_membership_users AS t1 WHERE (SELECT COUNT(*) FROM ".$wpdb->prefix."wp_membership_user_levels AS t2 WHERE t1.User_ID=t2.User_ID AND (t2.Expiration IS NULL OR t2.Expiration>=NOW()))>0 AND (t1.Email=%s OR t1.Username=%s)", @$_REQUEST['email'], @$_REQUEST['email']);
 		    	if($user_row = $wpdb->get_row($user_query, ARRAY_A)) {
 		    		$password = "";
@@ -716,12 +910,12 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 			    	if($wpdb->query($update_query)) {
 				    	$update_query = $wpdb->prepare("UPDATE ".$wpdb->prefix."wp_membership_users SET WP_Password=%s WHERE User_ID=%s", wp_hash_password($password), $user_row['User_ID']);
 			    		$wpdb->query($update_query);
-			    		$this->public_messages['do_password_reset'] = "<div class=\"forgot_password_message\">Password Successfully Reset. Check your e-mail for the new password.</div>";
+			    		$retval .= "<div class=\"forgot_password_message\">Password Successfully Reset. Check your e-mail for the new password.</div>";
 			    		wp_mail($user_row['Email'], "Password was reset by request", "Someone (probably you) requested your password be reset. Your new password is $password. This is case sensitive. You can login at: http://{$_SERVER['HTTP_HOST']}{$_SERVER['PHP_SELF']}?page_id=".urlencode($page_id)."\n--\nManagement");
 			    	}
-			    	else $this->public_messages['do_password_reset'] = "<div class=\"forgot_password_error\">Failed to reset password, please contact your system administrator.</div>";
+			    	else $retval .= "<div class=\"forgot_password_error\">Failed to reset password, please contact your system administrator.</div>";
 		    	}
-		    	else $this->public_messages['do_password_reset'] = "<div class=\"forgot_password_message\">Password Successfully Reset. Check your e-mail for the new password.</div>";
+		    	else $retval .= "<div class=\"forgot_password_message\">Password Successfully Reset. Check your e-mail for the new password.</div>";
 		    }
 		    else if($page_id == get_option("wp-membership_logout_page_id")) {
 				unset($_SESSION['wp-membership_plugin']['wp-membership_user_id']);
@@ -841,14 +1035,34 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 		    return $page;
 		}
 		
-		function activation() {
-			if($this->create_tables()) {
-				foreach($this->plugins as $plugin) {
-					if(is_a($plugin, 'wp_membership_payment_gateway')) $plugin->Install();
-				}
+		/**
+		 * @return bool
+		 */
+		function check_requirements() {
+			$retval = true;
+			
+			if(!function_exists('curl_init')) {
+				$this->admin_notices[] = "Unable to detect Curl";
+				$retval = false;
 			}
-			else {
-				$this->admin_notices[] = "Failed to properly create database";
+			if(!function_exists('simplexml_load_string')) {
+				$this->admin_notices[] = "Unable to detect SimpleXml";
+				$retval = false;
+			}
+			
+			return $retval;
+		}
+		
+		function activation() {
+			if($this->check_requirements()) {
+				if($this->create_tables()) {
+					foreach($this->plugins as $plugin) {
+						if(is_a($plugin, 'wp_membership_payment_gateway')) $plugin->Install();
+					}
+				}
+				else {
+					$this->admin_notices[] = "Failed to properly create database";
+				}
 			}
 		}
 		
@@ -1110,14 +1324,7 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 			
 			if(is_array($this->public_messages)) foreach($this->public_messages as $message) $retval = $message.$retval;
 			
-			$macro = get_option("wp-membership_loginfrom_macro");
-			if(trim($macro) != "" && $page_id == get_option("wp-membership_login_page_id")) {
-				$retval = str_replace($macro, $this->default_loginform(), $retval);
-			}
-			else if(trim(get_option("wp-membership_user_profile_from_macro")) != "" && $page_id == get_option("wp-membership_user_profile_page_id")) {
-				$retval = str_replace(get_option("wp-membership_user_profile_from_macro"), $this->default_userprofileform(), $retval);
-			}
-			else if($this->is_Register_Page($page_id)) {
+			if($this->is_Register_Page($page_id)) {
 				$register_query = $wpdb->prepare("SELECT * FROM ".$wpdb->prefix."wp_membership_register_pages WHERE LENGTH(Macro) > 0 AND WP_Page_ID=%s", @$_REQUEST['page_id']);
 				if($register_rows = $wpdb->get_results($register_query, ARRAY_A)) {
 					foreach($register_rows as $register_row) {
@@ -1239,187 +1446,6 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 				}
 			}
 
-			return $retval;
-		}
-		
-		function default_userprofileform() {
-			$retval = "";
-			
-			global $wpdb;
-			
-			$user_query = $wpdb->prepare("SELECT * FROM {$wpdb->prefix}wp_membership_users AS t1 WHERE t1.User_ID=%s", @$_SESSION['wp-membership_plugin']['wp-membership_user_id']);
-			if($user_row = $wpdb->get_row($user_query, ARRAY_A)) {
-				if(@$_REQUEST['do_userprofile'] == "1") {
-					if(strlen(trim(@$_REQUEST['password'])) > 0 || strlen(trim(@$_REQUEST['password2'])) > 0) {
-						if(strlen(trim(@$_REQUEST['password'])) > 0) {
-							if(trim(@$_REQUEST['password']) == trim(@$_REQUEST['password2'])) {
-								$update_query = $wpdb->prepare("UPDATE {$wpdb->prefix}wp_membership_users SET Password=PASSWORD(%s) WHERE User_ID=%s", trim(@$_REQUEST['password']), $user_row['User_ID']);
-								if($wpdb->query($update_query) !== false) {
-							    	$update_query = $wpdb->prepare("UPDATE ".$wpdb->prefix."wp_membership_users SET WP_Password=%s WHERE User_ID=%s", wp_hash_password(trim(@$_REQUEST['password'])), $user_row['User_ID']);
-						    		$wpdb->query($update_query);
-									$retval .= "<p>Successfully Updated Password</p>";
-								}
-								else {
-									$retval .= "<p>Failed to update password</p>";
-								}
-							}
-							else {
-								$retval .= "<p>Passwords must match</p>";
-							}
-						}
-						else {
-							$retval .= "<p>Password can not be blank</p>";
-						}
-					}
-					$update_query = $wpdb->prepare("UPDATE {$wpdb->prefix}wp_membership_users SET Email=%s WHERE User_ID=%s", trim(@$_REQUEST['email']), $user_row['User_ID']);
-					if($wpdb->query($update_query) !== false) {
-						$retval .= "<p>Successfully Updated Profile</p>";
-						$user_query = $wpdb->prepare("SELECT * FROM {$wpdb->prefix}wp_membership_users AS t1 WHERE t1.User_ID=%s", @$_SESSION['wp-membership_plugin']['wp-membership_user_id']);
-						$tmp = $user_row;
-						if(!($user_row = $wpdb->get_row($user_query, ARRAY_A))) {
-							$user_row = $tmp;
-						}
-					}
-					else {
-						$retval .= "<p>Failed to update profile</p>";
-					}
-				}
-				else if(@$_REQUEST['do_unsubscribe'] == "1") {
-					$userlevel_query = $wpdb->prepare("SELECT * FROM {$wpdb->prefix}wp_membership_user_levels AS t1 WHERE t1.User_ID=%s AND t1.User_Level_ID=%s", @$_SESSION['wp-membership_plugin']['wp-membership_user_id'], $_REQUEST['userlevelid']);
-					if($userlevel_row = $wpdb->get_row($userlevel_query, ARRAY_A)) {
-						$plugin = null;
-						if(is_array($this->plugins)) {
-							foreach($this->plugins as $p) {
-								if($p->has_Subscription(@$_REQUEST['userlevelid'])) {
-									$plugin = $p;
-								}
-							}
-							if(!is_null($plugin)) {
-								if($plugin->Uninstall_Subscription($plugin->find_Subscription(@$_REQUEST['userlevelid'])) !== false) {
-									$retval .= '<p>Successfully unsubscribed</p>';
-								}
-								else $retval .= '<p>Failed to unsubscribe</p>';
-							}
-							else $retval .= '<p>Failed to unsubscribe</p>';
-						}
-						else $retval .= '<p>Failed to unsubscribe</p>';
-					}
-					else $retval .= '<p>Failed to unsubscribe</p>';
-				}
-				$retval .= "<table border=\"0\">";
-				$retval .= "<form action=\"{$_SERVER['PHP_SELF']}?page_id=".urlencode(@$_REQUEST['page_id'])."\" method=\"post\"> <input name=\"do_userprofile\" type=\"hidden\" value=\"1\" />";
-				$retval .= "<tr>";
-				$retval .= "<td>Email</td>";
-				$retval .= "<td><input name=\"email\" type=\"text\" value=\"".htmlentities($user_row['Email'])."\" /></td>";
-				$retval .= "</tr>";
-				if(!is_null($user_row['Username']) && strlen(trim($user_row['Username'])) > 0) {
-					$retval .= "<tr>";
-					$retval .= "<td>Username</td>";
-					$retval .= "<td>".htmlentities($user_row['Username'])."</td>";
-					$retval .= "</tr>";
-				}
-				$retval .= "<tr>";
-				$retval .= "<td>Password</td>";
-				$retval .= "<td><input name=\"password\" type=\"password\" /></td>";
-				$retval .= "</tr>";
-				$retval .= "<tr>";
-				$retval .= "<td>Confirm Password</td>";
-				$retval .= "<td><input name=\"password2\" type=\"password\" /></td>";
-				$retval .= "</tr>";
-				$retval .= "<tr>";
-				$retval .= "<td colspan=\"2\"><input type=\"submit\" value=\"Update\" /></td>";
-				$retval .= "</tr>";
-				$retval .= "</form>";
-				$sub_query = $wpdb->prepare("SELECT * FROM {$wpdb->prefix}wp_membership_user_levels AS t1, {$wpdb->prefix}wp_membership_levels AS t2 WHERE t1.Level_ID=t2.Level_ID AND t1.User_ID=%s", @$_SESSION['wp-membership_plugin']['wp-membership_user_id']);
-				if($sub_rows = $wpdb->get_results($sub_query, ARRAY_A)) {
-					$retval .= "<tr><td colspan=\"2\"><h3>Subscription".(count($sub_rows) == 1 ? "" : "s")."</h3></td></tr>";
-					foreach($sub_rows as $id => $sub_row) {
-						$retval .= "<tr>";
-						$retval .= "<td>".htmlentities($sub_row['Name'])."</td>";
-						$value = (is_null($sub_row['Expiration']) ? "Never Expires" : ((@strtotime($sub_row['Expiration']) - time()) < 0 ? (@strtotime($sub_row['Expiration']) == 0 ? "Pending" : "Expired") : "Expires ".@date("m-d-Y", @strtotime($sub_row['Expiration']))));
-						$plugin = null;
-						if(is_array($this->plugins)) {
-							foreach($this->plugins as $p) {
-								if($p->has_Subscription($sub_row['User_Level_ID'])) {
-									$plugin = $p;
-								}
-							}
-						}
-						if(strlen($value) > 0 && !is_null($plugin)) $value .= "&nbsp;&nbsp;&nbsp;";
-						if(!is_null($plugin)) {
-							if($plugin->has_Unsubscribe_Button()) $value .= $plugin->get_Unsubscribe_Button($sub_row['User_ID'].'_'.$sub_row['Level_Price_ID'], $sub_row['Name'].' @ '.@$_SERVER['HTTP_HOST']);
-							else if($plugin->has_Uninstall_Subscription()) {
-								$value .= "<form action=\"{$_SERVER['PHP_SELF']}?page_id=".urlencode(@$_REQUEST['page_id'])."\" method=\"post\">";
-								$value .= '<input type="hidden" name="do_unsubscribe" value="1" />';
-								$value .= '<input type="hidden" name="userlevelid" value="'.htmlentities($sub_row['User_Level_ID']).'" />';
-								$value .= "<input type=\"submit\" value=\"Unsubscribe\" />";
-								$value .= "</form>";
-							}
-						}
-						$retval .= "<td>$value</td>";
-						$retval .= "</tr>";
-					}
-				}
-				$retval .= "</table>";
-			}
-			
-			return $retval;
-		}
-		
-		function default_loginform() {
-			$retval = "";
-
-			global $wpdb, $wp_query;
-			
-		    load_plugin_textdomain('wp-membership', false, $this->language_path);
-
-		    $page_id = isset($wp_query->queried_object->ID) ? $wp_query->queried_object->ID : "";
-			if(@$_REQUEST['forgot_password'] == "1") {
-				$retval .= "<form action=\"{$_SERVER['PHP_SELF']}?page_id=".urlencode($page_id)."\" method=\"post\"> <input name=\"do_forgot_password\" type=\"hidden\" value=\"1\" />";
-				$retval .= "<table border=\"0\">";
-				$retval .= "<tbody>";
-				$retval .= "<tr>";
-				$retval .= "<td>".__('Email', 'wp-membership');
-				$username_query = $wpdb->prepare("SELECT COUNT(*) AS Total FROM {$wpdb->prefix}wp_membership_users WHERE Username!=NULL");
-				if($username_row = $wpdb->get_row($username_query, ARRAY_A)) {
-					if($username_row['Total'] > 0) $retval .= " / ".__('Username', 'wp-membership');
-				}
-				$retval .= "</td>";
-				$retval .= "<td><input style=\"background-color: #ffffa0;\" name=\"email\" type=\"text\" value=\"".htmlentities(@$_REQUEST['email'])."\" /></td>";
-				$retval .= "</tr>";
-				$retval .= "<tr>";
-				$retval .= "<td colspan=\"2\"><input type=\"submit\" value=\"".__('Forgot Password', 'wp-membership')."\" /></td>";
-				$retval .= "</tr>";
-				$retval .= "</tbody></table>";
-				$retval .= "</form>";
-			}
-			else {
-				$retval .= "<form action=\"{$_SERVER['PHP_SELF']}?page_id=".urlencode($page_id)."\" method=\"post\"> <input name=\"do_login\" type=\"hidden\" value=\"1\" />";
-				$retval .= "<table border=\"0\">";
-				$retval .= "<tbody>";
-				$retval .= "<tr>";
-				$retval .= "<td>".__('Email', 'wp-membership');
-				$username_query = $wpdb->prepare("SELECT COUNT(*) AS Total FROM {$wpdb->prefix}wp_membership_users WHERE Username!=NULL");
-				if($username_row = $wpdb->get_row($username_query, ARRAY_A)) {
-					if($username_row['Total'] > 0) $retval .= " / ".__('Username', 'wp-membership');
-				}
-				$retval .= "</td>";
-				$retval .= "<td><input style=\"background-color: #ffffa0;\" name=\"email\" type=\"text\" /></td>";
-				$retval .= "</tr>";
-				$retval .= "<tr>";
-				$retval .= "<td>".__('Password', 'wp-membership')."</td>";
-				$retval .= "<td><input name=\"password\" type=\"password\" /></td>";
-				$retval .= "</tr>";
-				$retval .= "<tr>";
-				$retval .= "<td colspan=\"2\"><input type=\"submit\" value=\"".__('Login', 'wp-membership')."\" /></td>";
-				$retval .= "</tr>";
-				$retval .= "</tbody></table>";
-				$retval .= "</form>";
-	    		if(get_option('wp-membership_login_prompt_forgot_password') == "1") {
-	    			$retval .= "<div class=\"prompt_password\"><a href=\"{$_SERVER['PHP_SELF']}?page_id=".urlencode($page_id)."&forgot_password=1&email=".urlencode(@$_REQUEST['email'])."\">Forgot Password?</a></div>";
-	    		}
-			}
-			
 			return $retval;
 		}
 		
