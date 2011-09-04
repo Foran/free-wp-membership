@@ -31,7 +31,7 @@ Check the [Issues](http://free-wp-membership.foransrealm.com/Issues.html "Curren
 == Changelog ==
 = 1.1.7 =
 * List % completed progress by Milestone in News & Info
-* Converted the LoginFrom and UserProfile macros to Wordpress Shortcode
+* Converted the LoginFrom, RegistrationForm and UserProfileForm macros to Wordpress Shortcode
 * Added a requirements check to the activation code
 * More general code cleanup (added comments, removed unused filters, refactored and reorginized code paths, etc)
 * Issues on News & Info are now sorted by release milestone
