@@ -3,7 +3,7 @@ Contributors: foran
 Tags: membership
 Requires at least: 2.6.0
 Tested up to: 3.2.1
-Stable tag: 1.1.6.1
+Stable tag: 1.1.7
 
 Allows the ability to have a membership based page and post restrictions.
 
