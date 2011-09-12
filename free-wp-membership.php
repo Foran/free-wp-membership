@@ -1380,34 +1380,23 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 else if(version_compare(PHP_VERSION, $wp_membership_min_php_version, '<')) {
 	add_action('admin_notices', 'wp_membership_admin_notices');
 	function wp_membership_admin_notices() {
-		echo '<div id="message" class="error"><p><strong>wp-membership requires at least PHP '.$wp_membership_min_php_version.' to function properly.</strong></p></div>';
+		echo '<div id="message" class="error"><p><strong>Free WP-Membership requires at least PHP '.$wp_membership_min_php_version.' to function properly.</strong></p></div>';
 	}
 }
 else if(!function_exists("curl_init")) {
 	add_action('admin_notices', 'wp_membership_admin_notices');
 	function wp_membership_admin_notices() {
-		echo '<div id="message" class="error"><p><strong>wp-membership requires CURL to be installed.</strong></p></div>';
-	}
-}
-else if(!function_exists("mcrypt_decrypt")) {
-	add_action('admin_notices', 'wp_membership_admin_notices');
-	function wp_membership_admin_notices() {
-		echo '<div id="message" class="error"><p><strong>wp-membership requires mCrypt to be installed.</strong></p></div>';
-	}
-}
-else if(mcrypt_get_cipher_name(MCRYPT_RIJNDAEL_256) == false) {
-	add_action('admin_notices', 'wp_membership_admin_notices');
-	function wp_membership_admin_notices() {
-		echo '<div id="message" class="error"><p><strong>wp-membership requires mCrypt'."'".'s Rijndael 256 to be installed.</strong></p></div>';
+		echo '<div id="message" class="error"><p><strong>Free WP-Membership requires CURL to be installed.</strong></p></div>';
 	}
 }
 else if(!function_exists('simplexml_load_string')) {
 	add_action('admin_notices', 'wp_membership_admin_notices');
 	function wp_membership_admin_notices() {
-		echo '<div id="message" class="error"><p><strong>wp-membership requires SimpleXML to be installed.</strong></p></div>';
+		echo '<div id="message" class="error"><p><strong>Free WP-Membership requires SimpleXML to be installed.</strong></p></div>';
 	}
 }
 
+if(class_exists('wp_membership_plugin')) {
 	global $wp_membership_plugin;
 
 	if(function_exists('add_option')) {
@@ -1452,4 +1441,11 @@ else if(!function_exists('simplexml_load_string')) {
 		$wp_membership_plugin->init();
 		$wp_membership_plugin->do_Payment_Gateway_Postback();
 	}
+}
+else {
+	add_action('admin_notices', 'wp_membership_admin_notices2');
+	function wp_membership_admin_notices2() {
+		echo '<div id="message" class="error"><p><strong>Free WP-Membership Failed to load, most likely due to not meeting the minimum requirements</strong></p></div>';
+	}
+}
 ?>
