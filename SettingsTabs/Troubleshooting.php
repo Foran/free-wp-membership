@@ -49,7 +49,15 @@ if(isset($wp_membership_plugin) && class_exists('wp_membership_plugin') && is_a(
 			</tr>
 			
 			</table>
-					
+			
+			<h3>Unit Tests</h3>
+			<table class="form-table">
+			<tr valign="top">
+			<th scope="row">Unit Test Actions</th>
+			<td><input type="button" value="Execute" onclick="javascript:jQuery.ajax({type: 'POST', url:'http://foransrealm.com/~foran/wp_sandbox/wp-content/plugins/free-wp-membership/UnitTestFramework.php', data: {unit_test_nonce: '<?php echo wp_create_nonce('execute_unit_test'); ?>'}, success: function(data){alert(data);}});" /></td>
+			</tr>
+			</table>
+			
 			<input type="hidden" name="wp-membership_tab" value="7" />
 			<input type="hidden" name="wp-membership_action" value="update_troubleshooting" />
 			
