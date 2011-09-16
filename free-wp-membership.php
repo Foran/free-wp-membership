@@ -152,6 +152,16 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 			$this->init_shortcodes();
 
 			$methods = array();
+			
+			$basepath = pathinfo($_SERVER['SCRIPT_FILENAME']);
+			$basepath = ereg_replace("/wp-admin\$", "", @$basepath['dirname']);
+			$basepath = ereg_replace("/wp-content/plugins/free-wp-membership\$", "", $basepath);
+			require_once($basepath.'/wp-content/plugins/free-wp-membership/Widgets/Login.php');
+			add_action('widgets_init', array(&$this, 'widgets_init'));
+		}
+		
+		function widgets_init() {
+			return register_widget("FreeWPMembershipLoginWidget");
 		}
 		
 		function add_dashboard_widgets() {

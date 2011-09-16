@@ -48,7 +48,7 @@ if(!class_exists('wp_membership_Shortcode_LoginForm')) {
 		    $page_id = isset($wp_query->queried_object->ID) ? $wp_query->queried_object->ID : "";
 		    
 		    if(@$_REQUEST['forgot_password'] == "1") {
-				$retval .= "<form action=\"{$_SERVER['PHP_SELF']}?page_id=".urlencode($page_id)."\" method=\"post\"> <input name=\"do_forgot_password\" type=\"hidden\" value=\"1\" />";
+				$retval .= "<form action=\"{$_SERVER['PHP_SELF']}?page_id=".urlencode($page_id)."\" method=\"post\"><input type=\"hidden\" name=\"fwpm_form_type\" value=\"forgot_password\" /><input name=\"do_forgot_password\" type=\"hidden\" value=\"1\" />";
 				$retval .= "<table border=\"0\">";
 				$retval .= "<tbody>";
 				$retval .= "<tr>";
@@ -68,7 +68,7 @@ if(!class_exists('wp_membership_Shortcode_LoginForm')) {
 			}
 			else {
 				if(is_null($content) || trim($content) == '') {
-					$retval .= "<form action=\"{$_SERVER['PHP_SELF']}?page_id=".urlencode($page_id)."\" method=\"post\"> <input name=\"do_login\" type=\"hidden\" value=\"1\" />";
+					$retval .= "<form action=\"{$_SERVER['PHP_SELF']}?page_id=".urlencode($page_id)."\" method=\"post\"><input type=\"hidden\" name=\"fwpm_form_type\" value=\"login\" /><input name=\"do_login\" type=\"hidden\" value=\"1\" />";
 					$retval .= "<table border=\"0\">";
 					$retval .= "<tbody>";
 					$retval .= "<tr>";
