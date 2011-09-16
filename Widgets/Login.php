@@ -42,7 +42,9 @@ if(class_exists('WP_Widget') && !class_exists('FreeWPMembershipLoginWidget')) {
 
 		    $page_id = isset($wp_query->queried_object->ID) ? $wp_query->queried_object->ID : "";
 			if(@$_SESSION['wp-membership_plugin']['wp-membership_user_id'] > 0) {
-				
+				//**FIXME**//
+				//Add an optional Logout button
+				//**END_FIXME**//
 			}
 			else {
 				echo $before_widget;
