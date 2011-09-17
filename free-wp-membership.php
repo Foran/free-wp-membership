@@ -25,8 +25,27 @@ This file is part of Free WP-Membership.
 */
 
 $wp_membership_min_php_version = '5.3.0';
+$wp_membership_min_wp_version = '2.8.0';
+$free_wp_membership_min_requirements = true;
 
-if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_membership_min_php_version, '>=') && function_exists('simplexml_load_string')) {
+if(version_compare(PHP_VERSION, $wp_membership_min_php_version, '<')) {
+	$free_wp_membership_min_requirements = false;
+	add_action('admin_notices', create_function('', "echo '<div class=\"error\"><p>Free WP-Membership requires PHP ".$wp_membership_min_php_version." or Greater; detected version ".PHP_VERSION."</p></div>';"));
+}
+if(!function_exists('simplexml_load_string')) {
+	$free_wp_membership_min_requirements = false;
+	add_action('admin_notices', create_function('', "echo '<div class=\"error\"><p>Free WP-Membership requires SimpleXml to be installed</p></div>';"));
+}
+if(version_compare(get_bloginfo('version', 'raw'), $wp_membership_min_wp_version, '<')) {
+	$free_wp_membership_min_requirements = false;
+	add_action('admin_notices', create_function('', "echo '<div class=\"error\"><p>Free WP-Membership requires Wordpress ".$wp_membership_min_wp_version." or Greater; detected version ".get_bloginfo('version', 'raw')."</p></div>';"));
+}
+if(!function_exists("curl_init")) {
+	$free_wp_membership_min_requirements = false;
+	add_action('admin_notices', create_function('', "echo '<div class=\"error\"><p>Free WP-Membership requires CURL to be installed.</p></div>';"));
+}
+
+if(!class_exists('wp_membership_plugin') && $free_wp_membership_min_requirements) {
 	class wp_membership_plugin {
 		public $plugins = array();
 		private $m_SettingsTabs = array();
@@ -150,15 +169,29 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 			uasort($milestones, function ($a, $b) {
 				return isset($a['title']) && isset($b['title']) ? version_compare($a['title'], $b['title'], '>=') : (isset($b['title']) ? 1 : 0);
 			});
+			//http://feeds.feedburner.com/ForansBlogFreeWp-membership
 			?>
-			<h4>Milestones</h4>
+			<div class="table table_milestones">
+				<p class="sub">Milestones</p>
+				<table>
+					<?php
+					$last = false;
+					foreach($milestones as $milestone) {
+						?>
+						<tr><td class="first b b-milestones"><a href="<?php echo $milestone['link']; ?>"><?php echo htmlentities($milestone['title']); ?></a></td><td class="t milestones"><a href="<?php echo $milestone['link']; ?>"><?php echo htmlentities(number_format($milestone['progress'], 2).'% complete'); ?></a></td></tr>
+						<?php
+					} ?>
+				</table>
+			</div>
+			<div class="table table_news">
+				<p class="sub">News</p>
+				<div class="rss-widget">
+					<ul>
+						<li></li>
+					</ul>
+				</div>
+			</div>
 			<?php
-			$last = false;
-			foreach($milestones as $milestone) {
-				?>
-				<h5><a href="<?php echo $milestone['link']; ?>"><?php echo htmlentities($milestone['title'].' is '.number_format($milestone['progress'], 2).'% complete'); ?></a></h5>
-				<?php
-			}
 		}
 		
 		function load_register_shortcodes() {
@@ -640,7 +673,7 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 			$this->basepath = pathinfo($_SERVER['SCRIPT_FILENAME']);
 			$this->basepath = ereg_replace("/wp-admin\$", "", $basepath['dirname']);
 			$this->basepath = ereg_replace("/wp-content/plugins/free-wp-membership\$", "", $basepath);
-
+				/*
 				$dh = @opendir(dirname(__FILE__).'/plugins');
 				if($dh) {
 					while(($file = readdir($dh)) !== false) {
@@ -649,9 +682,9 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 							$option = "wp-membership_plugin_$name";
 							add_option($option, "");
 							if(get_option($option) == "1") {
-								//**FIXME**//
+								// **FIXME** //
 								//Find a way to make the cache work!
-								//**END_FIXME**//
+								// **END_FIXME** //
 								if(($plugin = wp_cache_get($option)) !== false) {
 									$this->plugins[$name] = $plugin;
 								}
@@ -672,6 +705,7 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 					}
 					closedir($dh);
 				}
+				*/
 			if(session_id() == "") session_start();
 			$clean_users_query = $wpdb->prepare("DELETE FROM {$wpdb->prefix}wp_membership_user_levels WHERE (Start < %s AND Expiration=%s) OR (Expiration > %s AND Expiration < %s)", @date("Y-m-d H:i:s", @strtotime("-3 days")), @date("Y-m-d H:i:s", 0), @date("Y-m-d H:i:s", 0), @date("Y-m-d H:i:s", @strtotime("-1 month")));
 			$wpdb->query($clean_users_query);
@@ -1348,26 +1382,8 @@ if(!class_exists('wp_membership_plugin') && version_compare(PHP_VERSION, $wp_mem
 		}
 	}
 }
-else if(version_compare(PHP_VERSION, $wp_membership_min_php_version, '<')) {
-	add_action('admin_notices', 'wp_membership_admin_notices');
-	function wp_membership_admin_notices() {
-		echo '<div id="message" class="error"><p><strong>Free WP-Membership requires at least PHP '.$wp_membership_min_php_version.' to function properly.</strong></p></div>';
-	}
-}
-else if(!function_exists("curl_init")) {
-	add_action('admin_notices', 'wp_membership_admin_notices');
-	function wp_membership_admin_notices() {
-		echo '<div id="message" class="error"><p><strong>Free WP-Membership requires CURL to be installed.</strong></p></div>';
-	}
-}
-else if(!function_exists('simplexml_load_string')) {
-	add_action('admin_notices', 'wp_membership_admin_notices');
-	function wp_membership_admin_notices() {
-		echo '<div id="message" class="error"><p><strong>Free WP-Membership requires SimpleXML to be installed.</strong></p></div>';
-	}
-}
 
-if(class_exists('wp_membership_plugin')) {
+if(class_exists('wp_membership_plugin') && $free_wp_membership_min_requirements) {
 	global $wp_membership_plugin;
 
 	if(function_exists('add_option')) {
@@ -1414,9 +1430,6 @@ if(class_exists('wp_membership_plugin')) {
 	}
 }
 else {
-	add_action('admin_notices', 'wp_membership_admin_notices2');
-	function wp_membership_admin_notices2() {
-		echo '<div id="message" class="error"><p><strong>Free WP-Membership Failed to load, most likely due to not meeting the minimum requirements</strong></p></div>';
-	}
+	add_action('admin_notices', create_function('', "echo '<div class=\"error\"><p>Free WP-Membership Failed to load, most likely due to not meeting the minimum requirements</p></div>';"));
 }
 ?>
