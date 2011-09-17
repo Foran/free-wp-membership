@@ -51,6 +51,8 @@ if(isset($wp_membership_plugin) && class_exists('wp_membership_plugin') && is_a(
 			</table>
 			
 			<h3>Unit Tests</h3>
+			<p>Coming Soon...</p>
+			<!--
 			<table class="form-table">
 			<tr valign="top">
 			<th scope="row">Unit Test Actions</th>
@@ -61,9 +63,12 @@ if(isset($wp_membership_plugin) && class_exists('wp_membership_plugin') && is_a(
 			<input type="hidden" name="wp-membership_tab" value="7" />
 			<input type="hidden" name="wp-membership_action" value="update_troubleshooting" />
 			
+			-->
+			<!--
 			<p class="submit">
-<!--			<input type="submit" name="Submit" value="<?php _e('Update Troubleshooting Options', 'wp-membership'); ?>" /> -->
+			<input type="submit" name="Submit" value="<?php _e('Update Troubleshooting Options', 'wp-membership'); ?>" /> 
 			</p>
+			-->
 			</form>
 			<?php
 			if($div_wrapper) echo '</div>';
