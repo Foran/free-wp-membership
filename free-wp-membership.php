@@ -52,7 +52,7 @@ if(!class_exists('wp_membership_plugin') && $free_wp_membership_min_requirements
 		private $m_Shortcodes = array();
 		private $methods = array();
 		private $basepath = '';
-		public $version = "1.1.8";
+		public $version = '1.1.9';
 		public $admin_notices = array();
 		public $admin_messages = array();
 		public $public_messages = array();
