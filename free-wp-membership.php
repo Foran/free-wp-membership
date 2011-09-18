@@ -170,11 +170,10 @@ if(!class_exists('wp_membership_plugin') && $free_wp_membership_min_requirements
 			uasort($milestones, function ($a, $b) {
 				return isset($a['title']) && isset($b['title']) ? version_compare($a['title'], $b['title'], '>=') : (isset($b['title']) ? 1 : 0);
 			});
-			//http://feeds.feedburner.com/ForansBlogFreeWp-membership
 			?>
-			<div class="table table_milestones">
-				<p class="sub">Milestones</p>
-				<table>
+			<div class="table table_milestones" style="float:left; width: 45%;margin-top: -15px;">
+				<p class="sub" style="color: #8F8F8F;font-size: 14px;">Milestones</p>
+				<table style="width:100%;">
 					<?php
 					$last = false;
 					foreach($milestones as $milestone) {
@@ -184,13 +183,11 @@ if(!class_exists('wp_membership_plugin') && $free_wp_membership_min_requirements
 					} ?>
 				</table>
 			</div>
-			<div class="table table_news">
-				<p class="sub">News</p>
-				<div class="rss-widget">
-					<ul>
-						<li></li>
-					</ul>
-				</div>
+			<div class="table table_news" style="margin-left: 55%;">
+				<p class="sub" style="color: #8F8F8F;font-size: 14px;">News</p>
+				<?php
+				wp_widget_rss_output('http://feeds.feedburner.com/ForansBlogFreeWp-membership', array('show_summary' => 1, 'show_date' => 1));
+				?>
 			</div>
 			<?php
 		}
