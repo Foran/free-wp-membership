@@ -26,7 +26,7 @@ if(!class_exists('wp_membership_Shortcode_Level')) {
 		 * @return Returns the tag name to hook
 		 */
 		function get_Shortcode() {
-			return get_option('wp-membership_level_shortcode', 'FWPM_Level');
+			return 'fwpm-level';//get_option('wp-membership_level_shortcode', 'fwpm-level');
 		}
 		
 		/**
@@ -42,14 +42,20 @@ if(!class_exists('wp_membership_Shortcode_Level')) {
 
 			global $wpdb, $wp_query, $wp_membership_plugin;
 			
-			$attributes = shortcode_atts(array('show_forgot_password' => get_option('wp-membership_login_prompt_forgot_password')), $atts);
-
-			load_plugin_textdomain('wp-membership', false, $wp_membership_plugin->language_path);
-
+			$levels = array();
+			foreach($atts as $key => $value) {
+				if(eregi('^level[0-9]*$', $key)) {
+					$levels[trim($value)] = trim($value);
+				}
+			}
+			
 		    $page_id = isset($wp_query->queried_object->ID) ? $wp_query->queried_object->ID : "";
 		    
-			if(!is_null($content) && trim($content) == '') {
-				$retval .= $content;
+			if(!is_null($content)) {
+				$display = false;
+				$mlevels = $wp_membership_plugin->get_User_Level_Names();
+				foreach($levels as $level) if(in_array($level, $mlevels)) $display = true;
+				if($display) $retval = do_shortcode($content);
 			}
 			
 			return $retval;

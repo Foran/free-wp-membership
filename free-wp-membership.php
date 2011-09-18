@@ -68,6 +68,7 @@ if(!class_exists('wp_membership_plugin') && $free_wp_membership_min_requirements
 			//$this->m_SettingsTabs['Feedback'] = array('title' => 'Feedback', 'class' => 'wp_membership_SettingsTab_Feedback');
 			$this->m_SettingsTabs['Troubleshooting'] = array('title' => 'Troubleshooting', 'class' => 'wp_membership_SettingsTab_Troubleshooting');
 			$this->m_Shortcodes[] = array('type' => 'LoginForm', 'class' => 'wp_membership_Shortcode_LoginForm');
+			$this->m_Shortcodes[] = array('type' => 'Level', 'class' => 'wp_membership_Shortcode_Level');
 			$this->m_Shortcodes[] = array('type' => 'UserProfileForm', 'class' => 'wp_membership_Shortcode_UserProfileForm');
 			
 			$this->load_register_shortcodes();
@@ -1003,6 +1004,23 @@ if(!class_exists('wp_membership_plugin') && $free_wp_membership_min_requirements
 				if($user_rows = $wpdb->get_results($wpdb->prepare("SELECT * FROM ".$wpdb->prefix."wp_membership_user_levels AS t1 WHERE t1.User_ID=%s", @$_SESSION['wp-membership_plugin']['wp-membership_user_id']), ARRAY_A)) {
 					foreach($user_rows as $user_row) {
 						$retval[$user_row['Level_ID']] = $user_row['Level_ID'];
+					}
+				}
+			}
+			
+			return $retval;
+		}
+		
+		
+		function get_User_Level_Names() {
+			$retval = array();
+
+			global $wpdb;
+			
+			if(@$_SESSION['wp-membership_plugin']['wp-membership_user_id'] > 0) {
+				if($user_rows = $wpdb->get_results($wpdb->prepare("SELECT t2.Level_ID, t2.Name FROM ".$wpdb->prefix."wp_membership_user_levels AS t1, ".$wpdb->prefix."wp_membership_levels AS t2 WHERE t1.User_ID=%s AND t1.Level_ID=t2.Level_ID", @$_SESSION['wp-membership_plugin']['wp-membership_user_id']), ARRAY_A)) {
+					foreach($user_rows as $user_row) {
+						$retval[$user_row['Level_ID']] = $user_row['Name'];
 					}
 				}
 			}
