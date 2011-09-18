@@ -3,7 +3,7 @@ Contributors: foran
 Tags: membership
 Requires at least: 2.8.0
 Tested up to: 3.2.1
-Stable tag: 1.1.7
+Stable tag: 1.1.8
 
 Allows the ability to have a membership based page and post restrictions.
 
@@ -29,6 +29,14 @@ Now while I don't have any specific dates things will be done, I am keeping a cu
 Check the [Issues](http://free-wp-membership.foransrealm.com/Issues.html "Current Issues") or [GitHub](https://github.com/Foran/free-wp-membership/issues "Current Issues") pages for the most current list of items.
 
 == Changelog ==
+= 1.1.8 =
+* Register pages now use Short codes
+* Enhanced the Dashboard Widget
+* Short code based partial content protection
+* Updated minimum supported WordPress version to 2.8.0
+* Moved Payment Gateway Interface (for future refactor)
+* Added a Login Widget
+* Enhanced minimum requirements checking
 = 1.1.7 =
 * List % completed progress by Milestone in News & Info
 * Converted the LoginFrom, RegistrationForm and UserProfileForm macros to Wordpress Shortcode
@@ -60,5 +68,5 @@ Contains [HotFix](https://github.com/Foran/free-wp-membership/issues/8 "Details 
 * PHP 5.3.0
 * Curl (Used to update News & Info)
 * Simple Xml
-* MySql
+* MySql 5
 * To Be Determined
