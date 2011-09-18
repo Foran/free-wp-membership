@@ -62,18 +62,6 @@ if(isset($wp_membership_plugin) && class_exists('wp_membership_plugin') && is_a(
 			</tr>
 			
 			<tr valign="top">
-			<th scope="row">Installed Add-ons</th>
-			<td><?php
-			$first = true;
-			foreach($wp_membership_plugin->plugins as $plugin => $file) {
-				if($first) $first = false;
-				else echo '<br />';
-				echo htmlentities($plugin);
-			}
-			?></td>
-			</tr>
-			
-			<tr valign="top">
 			<th scope="row">WordPress Version</th>
 			<td><?php
 			if(isset($GLOBALS['wp_version'])) {
