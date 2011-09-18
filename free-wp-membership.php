@@ -797,7 +797,7 @@ if(!class_exists('wp_membership_plugin') && $free_wp_membership_min_requirements
 		    else if($page_id == get_option("wp-membership_logout_page_id")) {
 				unset($_SESSION['wp-membership_plugin']['wp-membership_user_id']);
 		    }
-			else if($this->is_Register_Page($page_id)) {
+			else if($this->is_Register_Page($page_id) || $this->is_Register_Page(@$_REQUEST['member_register_page_id'])) {
 				switch(@$_REQUEST['do_register']) {
 					case "2":
 						if(is_email(@$_REQUEST['email']) && strlen(trim(@$_REQUEST['password'])) > 0 && @$_REQUEST['password'] == @$_REQUEST['password2']) {

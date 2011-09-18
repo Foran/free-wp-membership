@@ -159,18 +159,6 @@ if(isset($wp_membership_plugin) && class_exists('wp_membership_plugin') && is_a(
 						<td><input type="text" name="wp-membership_macro" value="<?php echo htmlentities($register_row['Macro']); ?>" /></td>
 						</tr>
 						
-						<tr valign="top">
-						<th scope="row">Page</th>
-						<td><select name="wp-membership_page_id"><option value="">[Choose a Page]</option><?php
-						$pages = get_pages();
-						foreach($pages as $page) {
-							echo "<option value=\"".htmlentities($page->ID)."\"";
-							if($register_row['WP_Page_ID'] == $page->ID) echo " SELECTED";
-							echo ">".htmlentities($page->post_title)."</option>";
-						}
-						?></select></td>
-						</tr>
-						
 						<style type="text/css">
 							#RegisterExtraFormFields {
 								position: absolute;
@@ -771,17 +759,6 @@ if(isset($wp_membership_plugin) && class_exists('wp_membership_plugin') && is_a(
 					<tr valign="top">
 					<th scope="row">Default Page Shortcode</th>
 					<td><input type="text" name="wp-membership_macro" value="RegisterPage" /></td>
-					</tr>
-					
-					<tr valign="top">
-					<th scope="row">Page</th>
-					<td><select name="wp-membership_page_id"><option value="">[Choose a Page]</option><?php
-					$pages = get_pages();
-					foreach($pages as $page) {
-						echo "<option value=\"".htmlentities($page->ID)."\"";
-						echo ">".htmlentities($page->post_title)."</option>";
-					}
-					?></select></td>
 					</tr>
 					
 					<tr valign="top">
