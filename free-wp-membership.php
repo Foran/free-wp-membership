@@ -54,6 +54,8 @@ if(!function_exists("ereg")) {
 }
 
 if(!class_exists('wp_membership_plugin') && $free_wp_membership_min_requirements) {
+	define('FWP_MEMBERSHIP_PATH', plugin_dir_path(__FILE__));
+	define('FWP_MEMBERSHIP_URL', plugin_dir_url(__FILE__));
 	class wp_membership_plugin {
 		public $plugins = array();
 		private $m_SettingsTabs = array();
@@ -147,8 +149,11 @@ if(!class_exists('wp_membership_plugin') && $free_wp_membership_min_requirements
 			$basepath = ereg_replace("/wp-content/plugins/free-wp-membership\$", "", $basepath);
 			require_once($basepath.'/wp-content/plugins/free-wp-membership/Widgets/Login.php');
 			add_action('widgets_init', array(&$this, 'widgets_init'));
+			
+			require_once(FWP_MEMBERSHIP_PATH.'UnitTestFramework.php');
+			$unitTestFramework = new wp_membership_UnitTestFramework($this);
 		}
-		
+
 		function widgets_init() {
 			return register_widget("FreeWPMembershipLoginWidget");
 		}

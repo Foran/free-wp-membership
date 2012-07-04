@@ -16,7 +16,7 @@
     along with Free WP-Membership.  If not, see <http://www.gnu.org/licenses/>.
 
 */
-require_once('../wp-content/plugins/free-wp-membership/interfaces/IWPMembershipSettingsTab.php');
+require_once(FWP_MEMBERSHIP_PATH.'interfaces/IWPMembershipSettingsTab.php');
 
 global $wp_membership_plugin;
 if(isset($wp_membership_plugin) && class_exists('wp_membership_plugin') && is_a($wp_membership_plugin, 'wp_membership_plugin')) {
@@ -36,6 +36,8 @@ if(isset($wp_membership_plugin) && class_exists('wp_membership_plugin') && is_a(
 			?>
 			<h2>WP-Membership - Troubleshooting</h2>
 			<?php
+			wp_enqueue_script('UnitTestFramework', FWP_MEMBERSHIP_URL.'UnitTestFramework.js', array('jquery'));
+			wp_localize_script('UnitTestFramework', 'FWPM_UTF', array('ajaxurl' => admin_url('admin-ajax.php')));
 			?>
 			<h3>Database</h3>
 			
@@ -50,71 +52,10 @@ if(isset($wp_membership_plugin) && class_exists('wp_membership_plugin') && is_a(
 			
 			<h3>Unit Tests</h3>
 
-			<script language="javascript" type="text/javascript">
-			<!--
-				function getTestNames() {
-					jQuery.ajax(
-						{
-							type: 'POST',
-							url:'<?php echo bloginfo('wpurl'); ?>/wp-content/plugins/free-wp-membership/UnitTestFramework.php',
-							data: {
-							    unit_test_nonce: '<?php echo wp_create_nonce('execute_unit_test'); ?>'
-							},
-							success: getTestNames_onSuccess
-						}
-					);					
-				}
-				function executeTest(test) {
-					var output = document.getElementById('unittest_' + test);
-					if(output) {
-						output.innerHTML = 'Executing...';
-					}
-					jQuery.ajax(
-						{
-							type: 'POST',
-							url:'<?php echo bloginfo('wpurl'); ?>/wp-content/plugins/free-wp-membership/UnitTestFramework.php',
-							data: {
-							    unit_test_nonce: '<?php echo wp_create_nonce('execute_unit_test'); ?>',
-							    execute_test: test
-							},
-							success: executeTest_onSuccess
-						}
-					);					
-				}
-				function getTestNames_onSuccess(data) {
-					eval('var result = ' + data);
-					if(result.result == 'success') {
-						var output = document.getElementById('testList');
-						var buffer = "<table class=\"form-table\">";
-						buffer += "<tr valign=\"top\">";
-						buffer += "<th scope=\"row\">Test Name</th>";
-						buffer += "<th>Status</th>";
-						buffer += "</tr>";
-						for(var test in result.tests) {
-							buffer += "<tr><td>" + result.tests[test] + "</td><td id=\"unittest_" + result.tests[test] + "\">Pending...</td></tr>";
-						}
-						buffer += "</table>";
-						output.innerHTML = buffer;
-						for(var test in result.tests) {
-							executeTest(result.tests[test]);
-						}
-					}
-				}
-				function executeTest_onSuccess(data) {
-					eval('var result = ' + data);
-					if(result.result == 'success') {
-						var output = document.getElementById('unittest_' + result.testName);
-						if(output) {
-							output.innerHTML = result.testResult;
-						}
-					}
-				}
-			-->
-			</script>
 			<table class="form-table">
 			<tr valign="top">
 			<th scope="row">Unit Test Actions</th>
-			<td><input type="button" value="Execute" onclick="javascript:getTestNames();" /></td>
+			<td><input type="button" value="Execute" onclick="javascript:getTestNames('<?php echo wp_create_nonce('execute_unit_test'); ?>');" /></td>
 			</tr>
 			</table>
 			
