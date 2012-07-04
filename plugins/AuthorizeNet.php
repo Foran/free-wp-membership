@@ -13,7 +13,7 @@ This file is part of Free WP-Membership.
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+    along with Free WP-Membership.  If not, see <http://www.gnu.org/licenses/>.
 */
 /*
  x_name_of_field=value of field&

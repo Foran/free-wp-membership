@@ -13,7 +13,7 @@ This file is part of Free WP-Membership.
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+    along with Free WP-Membership.  If not, see <http://www.gnu.org/licenses/>.
 */
 if(interface_exists("wp_membership_payment_gateway")) {
 	if(!class_exists("wp_membership_plugin_PayPal")) {

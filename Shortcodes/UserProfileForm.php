@@ -13,7 +13,7 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+    along with Free WP-Membership.  If not, see <http://www.gnu.org/licenses/>.
 
 */
 $wp_membership_shortcodes_userprofileform_path = pathinfo(__FILE__);
