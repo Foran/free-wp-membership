@@ -37,6 +37,13 @@ if(!class_exists('FWPM_Test_Environment') && interface_exists('IWPMembershipUnit
 			global $wp_membership_min_wp_version;
 			assert(version_compare(get_bloginfo('version', 'raw'), $wp_membership_min_wp_version, '>='));
 		}
+		function MySQLVersion() {
+			global $wpdb;
+			if($version_row = $wpdb->get_row("SELECT VERSION()", ARRAY_A)) {
+				$version_parts = explode('-', $version_row['VERSION()']);
+				assert(version_compare($version_parts[0], '5.0.0', '>='));
+			}
+		}
 	}
 }
 
