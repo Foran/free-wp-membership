@@ -1,11 +1,10 @@
-function getTestNames(nonce) {
+function getTestNames() {
         jQuery.ajax(
                 {
                         type: 'POST',
                         url: FWPM_UTF.ajaxurl,
                         data: {
-                                action: 'fwpm_utf_getTestNames',
-                                unit_test_nonce: nonce
+                                action: 'fwpm_utf_getTestNames'
                         },
                         success: getTestNames_onSuccess
                 }

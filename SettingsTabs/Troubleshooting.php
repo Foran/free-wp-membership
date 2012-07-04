@@ -36,7 +36,7 @@ if(isset($wp_membership_plugin) && class_exists('wp_membership_plugin') && is_a(
 			?>
 			<h2>WP-Membership - Troubleshooting</h2>
 			<?php
-			wp_enqueue_script('UnitTestFramework', FWP_MEMBERSHIP_URL.'UnitTestFramework.js', array('jquery'));
+			wp_enqueue_script('UnitTestFramework', FWP_MEMBERSHIP_URL.'UnitTestFramework.js', array('jquery', 'json2'));
 			wp_localize_script('UnitTestFramework', 'FWPM_UTF', array('ajaxurl' => admin_url('admin-ajax.php')));
 			?>
 			<h3>Database</h3>
@@ -55,7 +55,7 @@ if(isset($wp_membership_plugin) && class_exists('wp_membership_plugin') && is_a(
 			<table class="form-table">
 			<tr valign="top">
 			<th scope="row">Unit Test Actions</th>
-			<td><input type="button" value="Execute" onclick="javascript:getTestNames('<?php echo wp_create_nonce('execute_unit_test'); ?>');" /></td>
+			<td><input type="button" value="Execute" onclick="javascript:getTestNames();" /></td>
 			</tr>
 			</table>
 			

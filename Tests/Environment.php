@@ -43,6 +43,26 @@ if(!class_exists('FWPM_Test_Environment') && interface_exists('IWPMembershipUnit
 				assert(version_compare($version_row['VERSION()'], '5.0.0', '>=')) or $test_result->message = "MySQL Version is too old, expected at least 5.0.0 actual ".$version_row['VERSION()'];
 			}
 		}
+		function SimpleXML() {
+			global $test_result;
+			assert(function_exists('simplexml_load_string')) or $test_result->message = "Unable to find SimpleXML, is it installed?";
+		}
+		function Curl_Exists() {
+			global $test_result;
+			assert(function_exists('curl_init')) or $test_result->message = "Unable to find Curl, is it installed?";
+		}
+		function Curl_BasicSelfGet() {
+			global $test_result;
+			assert($ch = curl_init(get_bloginfo('wpurl'))) or $test_result->message = "Failed to init Curl";
+			if($ch) {
+				curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+				curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+				curl_setopt($ch, CURLOPT_MAXREDIRS, 10);
+				$buffer = curl_exec($ch);
+				assert($buffer !== FALSE) or $test_result->message .= "Failed to execute Curl request";
+				assert(strlen($buffer) > 0) or $test_result->message .= "Curl returned an empty buffer";
+			}
+		}
 	}
 }
 

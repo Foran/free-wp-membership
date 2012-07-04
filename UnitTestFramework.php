@@ -27,8 +27,7 @@ if(!class_exists('wp_membership_UnitTestFramework') && class_exists('wp_membersh
 			add_action('wp_ajax_fwpm_utf_executeTest', array(&$this, 'ExecuteTest'));
 		}
 		function get_TestNames() {
-			check_admin_referer('execute_unit_test', 'unit_test_nonce');
-			wp_verify_nonce($_POST['unit_test_nonce'], 'execute_unit_test');
+			check_admin_referer();
 			$test_result->result = 'success';
 			if(current_user_can('edit_plugins')) {
 				if($dh = opendir(plugin_dir_path(__FILE__).'Tests')) {
