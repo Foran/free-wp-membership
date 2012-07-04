@@ -55,6 +55,7 @@ if(!class_exists('wp_membership_UnitTestFramework') && class_exists('wp_membersh
 		function ExecuteTest() {
 			check_admin_referer('execute_unit_test', 'unit_test_nonce');
 			wp_verify_nonce($_POST['unit_test_nonce'], 'execute_unit_test');
+			global $test_result;
 			$test_result->result = 'success';
 			if($dh = opendir(plugin_dir_path(__FILE__).'Tests')) {
 				while(($file = readdir($dh)) !== false) {
