@@ -30,6 +30,7 @@ if(!class_exists('FWPM_Test_Environment') && interface_exists('IWPMembershipUnit
 			
 		}
 		function PHPVersion() {
+			global $wp_membership_min_php_version;
 			assert(version_compare(PHP_VERSION, $wp_membership_min_php_version, '>='));
 		}
 	}

@@ -17,7 +17,7 @@
 
 */
 
-if(!interface_exists('IWPMembershipShortcode')) {
+if(!interface_exists('IWPMembershipUnitTestClass')) {
 	interface IWPMembershipUnitTestClass {
 		function TestInitialize();
 		function TestCleanup();

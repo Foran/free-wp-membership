@@ -37,8 +37,6 @@ if(isset($wp_membership_plugin) && class_exists('wp_membership_plugin') && is_a(
 			<h2>WP-Membership - Troubleshooting</h2>
 			<?php
 			?>
-			<form method="post" action="<?php echo $_SERVER['PHP_SELF']."?".$query_string; ?>">
-			
 			<h3>Database</h3>
 			
 			<table class="form-table">
@@ -51,24 +49,89 @@ if(isset($wp_membership_plugin) && class_exists('wp_membership_plugin') && is_a(
 			</table>
 			
 			<h3>Unit Tests</h3>
-			<p>Coming Soon...</p>
+
+			<script language="javascript" type="text/javascript">
 			<!--
+				function getTestNames() {
+					jQuery.ajax(
+						{
+							type: 'POST',
+							url:'<?php echo bloginfo('wpurl'); ?>/wp-content/plugins/free-wp-membership/UnitTestFramework.php',
+							data: {
+							    unit_test_nonce: '<?php echo wp_create_nonce('execute_unit_test'); ?>'
+							},
+							success: getTestNames_onSuccess
+						}
+					);					
+				}
+				function executeTest(test) {
+					var output = document.getElementById('unittest_' + test);
+					if(output) {
+						output.innerHTML = 'Executing...';
+					}
+					jQuery.ajax(
+						{
+							type: 'POST',
+							url:'<?php echo bloginfo('wpurl'); ?>/wp-content/plugins/free-wp-membership/UnitTestFramework.php',
+							data: {
+							    unit_test_nonce: '<?php echo wp_create_nonce('execute_unit_test'); ?>',
+							    execute_test: test
+							},
+							success: executeTest_onSuccess
+						}
+					);					
+				}
+				function getTestNames_onSuccess(data) {
+					eval('var result = ' + data);
+					if(result.result == 'success') {
+						var output = document.getElementById('testList');
+						var buffer = "<table class=\"form-table\">";
+						buffer += "<tr valign=\"top\">";
+						buffer += "<th scope=\"row\">Test Name</th>";
+						buffer += "<th>Status</th>";
+						buffer += "</tr>";
+						for(var test in result.tests) {
+							buffer += "<tr><td>" + result.tests[test] + "</td><td id=\"unittest_" + result.tests[test] + "\">Pending...</td></tr>";
+						}
+						buffer += "</table>";
+						output.innerHTML = buffer;
+						for(var test in result.tests) {
+							executeTest(result.tests[test]);
+						}
+					}
+				}
+				function executeTest_onSuccess(data) {
+					eval('var result = ' + data);
+					if(result.result == 'success') {
+						var output = document.getElementById('unittest_' + result.testName);
+						if(output) {
+							output.innerHTML = result.testResult;
+						}
+					}
+				}
+			-->
+			</script>
 			<table class="form-table">
 			<tr valign="top">
 			<th scope="row">Unit Test Actions</th>
-			<td><input type="button" value="Execute" onclick="javascript:jQuery.ajax({type: 'POST', url:'http://foransrealm.com/~foran/wp_sandbox/wp-content/plugins/free-wp-membership/UnitTestFramework.php', data: {unit_test_nonce: '<?php echo wp_create_nonce('execute_unit_test'); ?>'}, success: function(data){alert(data);}});" /></td>
+			<td><input type="button" value="Execute" onclick="javascript:getTestNames();" /></td>
 			</tr>
 			</table>
+			
+			<div id="testList"></div>
+			
+			
+			<form method="post" action="<?php echo $_SERVER['PHP_SELF']."?".$query_string; ?>">
 			
 			<input type="hidden" name="wp-membership_tab" value="7" />
 			<input type="hidden" name="wp-membership_action" value="update_troubleshooting" />
 			
-			-->
-			<!--
+			
+			
 			<p class="submit">
 			<input type="submit" name="Submit" value="<?php _e('Update Troubleshooting Options', 'wp-membership'); ?>" /> 
 			</p>
-			-->
+			
 			</form>
 			<?php
 			if($div_wrapper) echo '</div>';

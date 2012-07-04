@@ -24,10 +24,13 @@ This file is part of Free WP-Membership.
 
 */
 
+global $wp_membership_min_php_version;
+
 $wp_membership_min_php_version = '5.3.0';
 $wp_membership_min_wp_version = '2.8.0';
 $free_wp_membership_min_requirements = true;
 
+// Sanity checks, so we can give sane error messages
 if(version_compare(PHP_VERSION, $wp_membership_min_php_version, '<')) {
 	$free_wp_membership_min_requirements = false;
 	add_action('admin_notices', create_function('', "echo '<div class=\"error\"><p>Free WP-Membership requires PHP ".$wp_membership_min_php_version." or Greater; detected version ".PHP_VERSION."</p></div>';"));
