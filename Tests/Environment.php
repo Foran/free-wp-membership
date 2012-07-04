@@ -30,18 +30,17 @@ if(!class_exists('FWPM_Test_Environment') && interface_exists('IWPMembershipUnit
 			
 		}
 		function PHPVersion() {
-			global $wp_membership_min_php_version;
-			assert(version_compare(PHP_VERSION, $wp_membership_min_php_version, '>='));
+			global $wp_membership_min_php_version, $test_result;
+			assert(version_compare(PHP_VERSION, $wp_membership_min_php_version, '>=')) or $test_result->message = "PHP Version is too old, expected at least $wp_membership_min_php_version actual ".PHP_VERSION;
 		}
 		function WordPressVersion() {
-			global $wp_membership_min_wp_version;
-			assert(version_compare(get_bloginfo('version', 'raw'), $wp_membership_min_wp_version, '>='));
+			global $wp_membership_min_wp_version, $test_result;
+			assert(version_compare(get_bloginfo('version', 'raw'), $wp_membership_min_wp_version, '>=')) or $test_result->message = "WordPress Version is too old, expected at least $wp_membership_min_wp_version actual ".get_bloginfo('version', 'raw');
 		}
 		function MySQLVersion() {
-			global $wpdb;
+			global $wpdb, $test_result;
 			if($version_row = $wpdb->get_row("SELECT VERSION()", ARRAY_A)) {
-				$version_parts = explode('-', $version_row['VERSION()']);
-				assert(version_compare($version_parts[0], '5.0.0', '>='));
+				assert(version_compare($version_row['VERSION()'], '5.0.0', '>=')) or $test_result->message = "MySQL Version is too old, expected at least 5.0.0 actual ".$version_row['VERSION()'];
 			}
 		}
 	}

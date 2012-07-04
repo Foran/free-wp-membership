@@ -54,6 +54,7 @@ function executeTest_onSuccess(data) {
                 var output = document.getElementById('unittest_' + result.testName);
                 if(output) {
                         output.innerHTML = result.testResult;
+                        if(result.message) output.innerHTML += ' - ' + result.message;
                 }
         }
 }
