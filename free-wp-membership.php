@@ -20,11 +20,12 @@ This file is part of Free WP-Membership.
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+    along with .  If not, see <http://www.gnu.org/licenses/>.
 
 */
 
 global $wp_membership_min_php_version;
+global $wp_membership_min_wp_version;
 
 $wp_membership_min_php_version = '5.3.0';
 $wp_membership_min_wp_version = '2.8.0';
@@ -46,6 +47,10 @@ if(version_compare(get_bloginfo('version', 'raw'), $wp_membership_min_wp_version
 if(!function_exists("curl_init")) {
 	$free_wp_membership_min_requirements = false;
 	add_action('admin_notices', create_function('', "echo '<div class=\"error\"><p>Free WP-Membership requires CURL to be installed.</p></div>';"));
+}
+if(!function_exists("ereg")) {
+	$free_wp_membership_min_requirements = false;
+	add_action('admin_notices', create_function('', "echo '<div class=\"error\"><p>Free WP-Membership requires eReg regular expression support to be installed.</p></div>';"));
 }
 
 if(!class_exists('wp_membership_plugin') && $free_wp_membership_min_requirements) {

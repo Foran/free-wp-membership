@@ -33,6 +33,10 @@ if(!class_exists('FWPM_Test_Environment') && interface_exists('IWPMembershipUnit
 			global $wp_membership_min_php_version;
 			assert(version_compare(PHP_VERSION, $wp_membership_min_php_version, '>='));
 		}
+		function WordPressVersion() {
+			global $wp_membership_min_wp_version;
+			assert(version_compare(get_bloginfo('version', 'raw'), $wp_membership_min_wp_version, '>='));
+		}
 	}
 }
 
