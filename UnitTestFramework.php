@@ -30,23 +30,29 @@ if(!class_exists('wp_membership_UnitTestFramework') && class_exists('wp_membersh
 			check_admin_referer('execute_unit_test', 'unit_test_nonce');
 			wp_verify_nonce($_POST['unit_test_nonce'], 'execute_unit_test');
 			$test_result->result = 'success';
-			if($dh = opendir(plugin_dir_path(__FILE__).'Tests')) {
-				while(($file = readdir($dh)) !== false) {
-					$fullFile = plugin_dir_path(__FILE__).'Tests/'.$file;
-					if(!is_dir($fullFile)) {
-						require_once($fullFile);
+			if(current_user_can('edit_plugins')) {
+				if($dh = opendir(plugin_dir_path(__FILE__).'Tests')) {
+					while(($file = readdir($dh)) !== false) {
+						$fullFile = plugin_dir_path(__FILE__).'Tests/'.$file;
+						if(!is_dir($fullFile)) {
+							require_once($fullFile);
+						}
+					}
+					closedir($dh);
+				}
+				$test_result->tests = array();
+				foreach(get_declared_classes() as $class) {
+					$reflection = new ReflectionClass($class);
+					if($reflection->implementsInterface('IWPMembershipUnitTestClass')) {
+						foreach(array_diff(get_class_methods($class), get_class_methods('IWPMembershipUnitTestClass')) as $test) {
+							$test_result->tests[] = array('caption' => $class.' - '.$test, 'name' => $class.':'.$test, nonce => wp_create_nonce('execute_unit_test'));
+						}
 					}
 				}
-				closedir($dh);
 			}
-			$test_result->tests = array();
-			foreach(get_declared_classes() as $class) {
-				$reflection = new ReflectionClass($class);
-				if($reflection->implementsInterface('IWPMembershipUnitTestClass')) {
-					foreach(array_diff(get_class_methods($class), get_class_methods('IWPMembershipUnitTestClass')) as $test) {
-						$test_result->tests[] = array('caption' => $class.' - '.$test, 'name' => $class.':'.$test, nonce => wp_create_nonce('execute_unit_test'));
-					}
-				}
+			else {
+				$test_result->result = 'error';
+				$test_result->errorMessage = 'Access Denied';
 			}
 			header('Content-Type: application/json');
 			echo json_encode($test_result);
@@ -57,34 +63,40 @@ if(!class_exists('wp_membership_UnitTestFramework') && class_exists('wp_membersh
 			wp_verify_nonce($_POST['unit_test_nonce'], 'execute_unit_test');
 			global $test_result;
 			$test_result->result = 'success';
-			if($dh = opendir(plugin_dir_path(__FILE__).'Tests')) {
-				while(($file = readdir($dh)) !== false) {
-					$fullFile = plugin_dir_path(__FILE__).'Tests/'.$file;
-					if(!is_dir($fullFile)) {
-						require_once($fullFile);
+			if(current_user_can('edit_plugins')) {
+				if($dh = opendir(plugin_dir_path(__FILE__).'Tests')) {
+					while(($file = readdir($dh)) !== false) {
+						$fullFile = plugin_dir_path(__FILE__).'Tests/'.$file;
+						if(!is_dir($fullFile)) {
+							require_once($fullFile);
+						}
 					}
+					closedir($dh);
 				}
-				closedir($dh);
+				$test_result->testName = $_POST['execute_test'];
+				$parts = explode(':', $test_result->testName);
+				$reflection = new ReflectionClass($parts[0]);
+				$test_result->testResult = 'Failed';
+				if($reflection->implementsInterface('IWPMembershipUnitTestClass') && !in_array($parts[0], get_class_methods('IWPMembershipUnitTestClass'))) {
+					assert_options(ASSERT_ACTIVE, true);
+					assert_options(ASSERT_BAIL, false);
+					assert_options(ASSERT_WARNING, false);
+					assert_options(ASSERT_QUIET_EVAL, true);
+					assert_options(ASSERT_CALLBACK, function() use ($file, $line, $code) {
+						global $test_result;
+						$test_result->testResult = 'Failed';
+					});
+					$test_result->testResult = 'Passed';
+					eval('$class = new '.$parts[0].'();');
+					$class->TestInitialize();
+					call_user_func_array(array(&$class, $parts[1]), array());
+					$class->TestCleanup();
+				}
 			}
-			$test_result->testName = $_POST['execute_test'];
-			$parts = explode(':', $test_result->testName);
-			$reflection = new ReflectionClass($parts[0]);
-			$test_result->testResult = 'Failed';
-			if($reflection->implementsInterface('IWPMembershipUnitTestClass') && !in_array($parts[0], get_class_methods('IWPMembershipUnitTestClass'))) {
-				assert_options(ASSERT_ACTIVE, true);
-				assert_options(ASSERT_BAIL, false);
-				assert_options(ASSERT_WARNING, false);
-				assert_options(ASSERT_QUIET_EVAL, true);
-				assert_options(ASSERT_CALLBACK, function() use ($file, $line, $code) {
-					global $test_result;
-					$test_result->testResult = 'Failed';
-				});
-				$test_result->testResult = 'Passed';
-				eval('$class = new '.$parts[0].'();');
-				$class->TestInitialize();
-				call_user_func_array(array(&$class, $parts[1]), array());
-				$class->TestCleanup();
-			}			
+			else {
+				$test_result->result = 'error';
+				$test_result->errorMessage = 'Access Denied';
+			}
 			header('Content-Type: application/json');
 			echo json_encode($test_result);
 			exit;
