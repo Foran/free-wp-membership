@@ -16,11 +16,6 @@
     along with Free WP-Membership.  If not, see <http://www.gnu.org/licenses/>.
 
 */
-$basepath = pathinfo($_SERVER['SCRIPT_FILENAME']);
-$basepath = ereg_replace("/wp-admin\$", "", @$basepath['dirname']);
-$basepath = ereg_replace("/wp-content/plugins/free-wp-membership\$", "", $basepath);
-require_once($basepath.'/wp-content/plugins/free-wp-membership/interfaces/IWPMembershipUnitTestClass.php');
-
 if(!class_exists('FWPM_Test_Environment') && interface_exists('IWPMembershipUnitTestClass')) {
 	class FWPM_Test_Envoronment implements IWPMembershipUnitTestClass {
 		function TestInitialize() {

@@ -17,8 +17,7 @@
 
 */
 
-$wp_membership_shortcodes_loginform_path = pathinfo(__FILE__);
-require_once(ereg_replace("/Shortcodes\$", "", $wp_membership_shortcodes_loginform_path['dirname']).'/interfaces/IWPMembershipShortcode.php');
+require_once(FWP_MEMBERSHIP_PATH.'interfaces/IWPMembershipShortcode.php');
 
 if(!class_exists('wp_membership_Shortcode_Level')) {
 	class wp_membership_Shortcode_Level implements IWPMembershipShortcode {

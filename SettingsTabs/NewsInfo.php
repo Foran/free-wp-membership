@@ -16,7 +16,7 @@
     along with Free WP-Membership.  If not, see <http://www.gnu.org/licenses/>.
 
 */
-require_once('../wp-content/plugins/free-wp-membership/interfaces/IWPMembershipSettingsTab.php');
+require_once(FWP_MEMBERSHIP_PATH.'interfaces/IWPMembershipSettingsTab.php');
 
 global $wp_membership_plugin;
 if(isset($wp_membership_plugin) && class_exists('wp_membership_plugin') && is_a($wp_membership_plugin, 'wp_membership_plugin') && !class_exists('wp_membership_SettingsTab_NewsInfo')) {

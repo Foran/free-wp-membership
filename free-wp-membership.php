@@ -144,10 +144,7 @@ if(!class_exists('wp_membership_plugin') && $free_wp_membership_min_requirements
 
 			$methods = array();
 			
-			$basepath = pathinfo($_SERVER['SCRIPT_FILENAME']);
-			$basepath = ereg_replace("/wp-admin\$", "", @$basepath['dirname']);
-			$basepath = ereg_replace("/wp-content/plugins/free-wp-membership\$", "", $basepath);
-			require_once($basepath.'/wp-content/plugins/free-wp-membership/Widgets/Login.php');
+			require_once(FWP_MEMBERSHIP_PATH.'Widgets/Login.php');
 			add_action('widgets_init', array(&$this, 'widgets_init'));
 			
 			require_once(FWP_MEMBERSHIP_PATH.'UnitTestFramework.php');

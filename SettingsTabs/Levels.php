@@ -16,7 +16,7 @@
     along with Free WP-Membership.  If not, see <http://www.gnu.org/licenses/>.
 
 */
-require_once('../wp-content/plugins/free-wp-membership/interfaces/IWPMembershipSettingsTab.php');
+require_once(FWP_MEMBERSHIP_PATH.'interfaces/IWPMembershipSettingsTab.php');
 
 global $wp_membership_plugin;
 if(isset($wp_membership_plugin) && class_exists('wp_membership_plugin') && is_a($wp_membership_plugin, 'wp_membership_plugin')) {
@@ -26,15 +26,15 @@ if(isset($wp_membership_plugin) && class_exists('wp_membership_plugin') && is_a(
 				return __FILE__;
 			}
 			function DisplayTab() {
-			global $wpdb;
-		    load_plugin_textdomain('wp-membership', false, $this->language_path);
+				global $wpdb;
+				load_plugin_textdomain('wp-membership', false, $this->language_path);
 		
-			$div_wrapper = false;
-			if(!isset($query_string)) {
-			    $query_string = "page=".urlencode(@$_REQUEST['page']);//ereg_replace("[&?]?wp-membership_tab[=][^&]*", "", @$_SERVER['QUERY_STRING']);
-			    $div_wrapper = true;
-			}
-			if($div_wrapper) echo '<div class="wrap">';
+				$div_wrapper = false;
+				if(!isset($query_string)) {
+				    $query_string = "page=".urlencode(@$_REQUEST['page']);//ereg_replace("[&?]?wp-membership_tab[=][^&]*", "", @$_SERVER['QUERY_STRING']);
+				    $div_wrapper = true;
+				}
+				if($div_wrapper) echo '<div class="wrap">';
 			?>
 			<h2><?php _e('WP-Membership Plugin - Levels', 'wp-membership'); ?></h2>
 			<?php
