@@ -75,7 +75,7 @@ if(!class_exists('wp_membership_plugin') && $free_wp_membership_min_requirements
 			$this->m_SettingsTabs['Levels'] = array('title' => 'Levels', 'class' => 'wp_membership_SettingsTab_Levels');
 			$this->m_SettingsTabs['RegisterPages'] = array('title' => 'Register Pages', 'class' => 'wp_membership_SettingsTab_RegisterPages');
 			//$this->m_SettingsTabs['PaymentGateways'] = array('title' => 'Payment Gateways', 'class' => 'wp_membership_SettingsTab_PaymentGateways');
-			//$this->m_SettingsTabs['Feedback'] = array('title' => 'Feedback', 'class' => 'wp_membership_SettingsTab_Feedback');
+			$this->m_SettingsTabs['Feedback'] = array('title' => 'Feedback', 'class' => 'wp_membership_SettingsTab_Feedback');
 			$this->m_SettingsTabs['Troubleshooting'] = array('title' => 'Troubleshooting', 'class' => 'wp_membership_SettingsTab_Troubleshooting');
 			$this->m_Shortcodes[] = array('type' => 'LoginForm', 'class' => 'wp_membership_Shortcode_LoginForm');
 			$this->m_Shortcodes[] = array('type' => 'Level', 'class' => 'wp_membership_Shortcode_Level');
