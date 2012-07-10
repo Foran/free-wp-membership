@@ -327,11 +327,12 @@ if(isset($wp_membership_plugin) && class_exists('wp_membership_plugin') && is_a(
 							}
 						}
 
-						$download = get_option('siteurl')."/wp-content/plugins/wp-membership/wp-membership.php?fetch_user_list=1";
+						$download = admin_url('admin-ajax.php');
 						?>
 						<h3>Export User List</h3>
 						<form method="post" action="<?php echo $download; ?>">
-					
+						<input type="hidden" name="action" value="fwpm_download_user_list" />
+						<input type="hidden" name="userlist_nonce" value="<?php echo htmlentities(wp_create_nonce('execute_unit_test')); ?>" />
 						<p class="submit">
 							<input type="submit" name="Submit" value="<?php _e('Download User List', 'wp-membership'); ?>" />
 						</p>

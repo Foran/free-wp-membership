@@ -144,11 +144,47 @@ if(!class_exists('wp_membership_plugin') && $free_wp_membership_min_requirements
 
 			$methods = array();
 			
+			add_action('wp_ajax_fwpm_download_user_list', array(&$this, 'downloadUserList'));
+			
 			require_once(FWP_MEMBERSHIP_PATH.'Widgets/Login.php');
 			add_action('widgets_init', array(&$this, 'widgets_init'));
 			
 			require_once(FWP_MEMBERSHIP_PATH.'UnitTestFramework.php');
 			$unitTestFramework = new wp_membership_UnitTestFramework($this);
+		}
+
+		function downloadUserList() {
+			global $wpdb;
+			check_admin_referer('execute_unit_test', 'userlist_nonce');
+			header("Content-Type: application/download");
+			header("Content-Disposition: attachment; filename=user_list.csv;");
+			if(current_user_can('edit_plugins')) {
+				if($user_rows = $wpdb->get_results($wpdb->prepare("SELECT * FROM ".$wpdb->prefix."wp_membership_users AS t1 ORDER BY t1.Email"), ARRAY_A)) {
+					$output = array('Email', 'Username', 'Extra_Fields');
+					$fh = fopen("php://output", "w");
+					if($fh) {
+						fputcsv($fh, $output);
+						foreach($user_rows as $user_row) {
+							$output = array($user_row['Email'], $user_row['Username']);
+							$extra_fields = @unserialize($user_row['Extra_Fields']);
+							$data = "";
+							if(is_array($extra_fields)) {
+								foreach($extra_fields as $extra_field) {
+									if(isset($extra_field->name) && isset($extra_field->value)) {
+										if(strlen($data) > 0) $data .= ",";
+										$data .= $extra_field->name."=".$extra_field->value;
+									}
+								}
+							}
+							$output[] = $data;
+							fputcsv($fh, $output);
+						}
+						fclose($fh);
+					}
+				}
+			}
+			else echo "Access Denied";
+			exit;
 		}
 
 		function widgets_init() {
@@ -1417,38 +1453,6 @@ if(class_exists('wp_membership_plugin') && $free_wp_membership_min_requirements)
 	else {
 		chdir("../../../");
 		include_once("wp-config.php");
-		if(@$_REQUEST['fetch_user_list'] == "1") {
-			
-			header("Content-Type: application/download");
-			header("Content-Disposition: attachment; filename=user_list.csv;");
-			if(current_user_can('edit_plugins')) {
-				if($user_rows = $wpdb->get_results($wpdb->prepare("SELECT * FROM ".$wpdb->prefix."wp_membership_users AS t1 ORDER BY t1.Email"), ARRAY_A)) {
-					$output = array('Email', 'Username', 'Extra_Fields');
-					$fh = fopen("php://output", "w");
-					if($fh) {
-						fputcsv($fh, $output);
-						foreach($user_rows as $user_row) {
-							$output = array($user_row['Email'], $user_row['Username']);
-							$extra_fields = @unserialize($user_row['Extra_Fields']);
-							$data = "";
-							if(is_array($extra_fields)) {
-								foreach($extra_fields as $extra_field) {
-									if(isset($extra_field->name) && isset($extra_field->value)) {
-										if(strlen($data) > 0) $data .= ",";
-										$data .= $extra_field->name."=".$extra_field->value;
-									}
-								}
-							}
-							$output[] = $data;
-							fputcsv($fh, $output);
-						}
-						fclose($fh);
-					}
-				}
-			}
-			else echo "Access Denied";
-			exit;
-		}
 		$wp_membership_plugin = new wp_membership_plugin();
 		$wp_membership_plugin->init();
 		$wp_membership_plugin->do_Payment_Gateway_Postback();
